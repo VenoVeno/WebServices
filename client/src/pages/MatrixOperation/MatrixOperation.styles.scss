@@ -1,0 +1,64 @@
+.matrix-operation-wrapper {
+    margin: 20px;
+    text-align: center;
+
+    .header {
+        padding: 20px;
+    }
+    .matrix-input {
+        .row-column-count {
+            gap: 20px;
+            padding: 20px;
+
+            .custom-input-text {
+                margin: 12px;
+            }
+        }
+        .custom-button {
+            margin-top: 20px;
+            width: 50%;
+        }
+        .matrix-numbers {
+            display: flex;
+
+            li {
+                list-style-type: none;
+                margin: 20px;
+            }
+        }
+        .two-dim-matrix-numbers {
+            .input-matrix-wrapper {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+
+                .input-matrix {
+                    .matrix-name {
+                        color: blue;
+                    }
+                }
+            }
+            .output-matrix-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+
+                .output-matrix {
+                    border: 4px solid #0c6688;
+                    border-radius: 12px;
+                    margin: 8px;
+                    padding: 8px;
+
+                    .matrix-name {
+                        color: blue;
+                    }
+                }
+            }
+            .row {
+                display: flex;
+                li {
+                    list-style-type: none;
+                    margin: 20px;
+                }
+            }
+        }
+    }
+}

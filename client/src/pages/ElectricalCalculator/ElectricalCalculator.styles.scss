@@ -1,0 +1,90 @@
+.electrical-calculator-container {
+    margin: 20px;
+    text-align: center;
+    .header {
+        padding: 20px;
+        text-transform: uppercase;
+    }
+
+    .row-flex {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
+
+    .available-conversion {
+        height: 60vh;
+        overflow-x: auto;
+
+        li {
+            padding: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .current-conversion {
+            color: #0c6688;
+        }
+    }
+
+    .input-and-output {
+        .selection-wrapper {
+            padding: 8px;
+        }
+        .input-wrapper {
+            display: flex;
+            flex-direction: row;
+            padding: 4px;
+            gap: 20px;
+        }
+
+        .button-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .result {
+            padding: 28px;
+            overflow: auto;
+
+            .resultant-value {
+                color: #0c6688;
+            }
+
+            .row-span {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+            }
+
+            div {
+                padding: 8px;
+            }
+        }
+    }
+
+    select {
+        width: auto;
+        font-family: "Ubuntu";
+    }
+    select,
+    select > option {
+        border: 1px solid #999;
+        padding: 0.5rem;
+        background-color: white;
+        color: black;
+        text-align: center;
+        border-radius: 11px;
+        font-size: 15px;
+    }
+
+    select:focus {
+        cursor: pointer;
+    }
+
+    @media screen and (max-width: 500px) {
+        select {
+            width: 100%;
+        }
+    }
+}

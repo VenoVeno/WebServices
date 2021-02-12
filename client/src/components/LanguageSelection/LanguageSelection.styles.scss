@@ -1,0 +1,23 @@
+.language-selection-container {
+    .flex-wrapper {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        
+        .info {
+            color: #f7bc61;
+            text-align: center;
+            padding: 20px;
+
+            span {
+                color: orange;
+            }
+        }
+        .radio-button-container {
+            display: flex;
+            justify-content: center;
+            gap: 23px;
+            padding: 20px;
+        }
+    }
+}

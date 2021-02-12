@@ -1,0 +1,21 @@
+.custom-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 83%;
+    cursor: pointer;
+    color: #fff !important;
+    text-transform: uppercase;
+    text-decoration: none;
+    background: #0c6688;
+    padding: 8px;
+    border-radius: 50px;
+    border: none;
+    transition: all 0.4s ease 0s;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.custom-disabled-button {
+    background: #a5a5a5;
+}

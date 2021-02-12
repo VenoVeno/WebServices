@@ -1,0 +1,14 @@
+.custom-input-text {
+    border-radius: 8px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    font-size: medium;
+    font-family: inherit;
+
+    &:focus {
+        transition: 0.35s ease;
+        border: 1px solid #66afe9;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+    }
+}

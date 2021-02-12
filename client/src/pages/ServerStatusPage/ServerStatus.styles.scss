@@ -1,0 +1,55 @@
+.server-status-check {
+    margin: 0px 40px;
+
+    .header {
+        .logo-container {
+            .back-icon {
+                cursor: pointer;
+                height: 60px;
+                width: 60px;
+                mix-blend-mode: darken;
+                g {
+                    fill: black;
+                }
+            }
+        }
+    }
+
+    .content {
+        text-align: center;
+        margin-top: 40px;
+
+        .server-url-wrapper {
+            padding-bottom: 12px;
+
+            .url-and-image {
+                cursor: pointer;
+            }
+
+            .server-url {
+                color: #2bb673;
+            }
+
+            svg {
+                width: 20px;
+                height: 14px;
+
+                g {
+                    fill: #2bb673;
+                }
+            }
+        }
+
+        .error {
+            color: #b90c0c;
+        }
+    }
+
+    @media screen and (max-width: 1050px) {
+        margin: 0px 30px;
+    }
+
+    @media screen and (max-width: 700px) {
+        margin: 0px 20px;
+    }
+}

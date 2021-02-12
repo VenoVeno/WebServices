@@ -1,0 +1,19 @@
+.home-page-wrapper {
+    .header {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .select-container {
+        text-align: center;
+        margin: 20px;
+        select {
+            border-radius: 14px;
+            background-color: white;
+            width: auto;
+            font-size: 14px;
+            padding: 6px;
+            text-align-last: center;
+        }
+    }
+}

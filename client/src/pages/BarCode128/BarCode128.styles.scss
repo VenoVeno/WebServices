@@ -1,0 +1,31 @@
+.barcode-128-container {
+    margin: 20px;
+    text-align: center;
+
+    .header {
+        padding: 20px;
+        text-transform: uppercase;
+    }
+    .info {
+        color: orange;
+        padding: 20px;
+    }
+    .row-flex-wrapper {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 32px;
+    }
+    .radio-button-container {
+        padding: 20px;
+    }
+    .custom-button {
+        width: 30%;
+    }
+
+    img {
+        width: auto;
+        margin-top: 28px;
+        border: 1px solid black;
+    }
+}

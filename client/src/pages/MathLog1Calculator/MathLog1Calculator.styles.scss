@@ -1,0 +1,45 @@
+.math-log-1-calculator-container {
+    margin: 20px;
+    text-align: center;
+
+    .header {
+        padding: 20px;
+        text-transform: uppercase;
+    }
+
+    .calculation-type-wrapper {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        margin: 20px;
+    }
+
+    input:focus {
+        outline: none;
+    }
+    
+    .input-wrapper {
+        input {
+            margin: 20px;
+        }
+    }
+
+    .result {
+        padding: 28px;
+        overflow: auto;
+
+        .resultant-value {
+            color: #0c6688;
+        }
+
+        .row-span {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        div {
+            padding: 8px;
+        }
+    }
+}

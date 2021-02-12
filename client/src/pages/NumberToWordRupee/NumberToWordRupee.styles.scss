@@ -1,0 +1,31 @@
+.number-to-word-rupee-container {
+    margin: 20px;
+    text-align: center;
+
+    .warning-container {
+        color: red;
+    }
+
+    .input-type-1 {
+        margin-bottom: 10%;
+    }
+
+    .header {
+        padding: 20px;
+        text-transform: uppercase;
+    }
+    .flex-wrapper {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 32px;
+
+        .custom-button {
+            width: 30%;
+        }
+    }
+    .result {
+        color: #0c6688;
+        padding: 28px;
+    }
+}

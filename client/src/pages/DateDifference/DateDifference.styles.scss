@@ -1,0 +1,33 @@
+.date-difference-calculator-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    .header {
+        text-align: center;
+        padding: 20px;
+        text-transform: uppercase;
+    }
+    .warning-container {
+        padding: 20px;
+        text-align: center;
+        color: red;
+    }
+    .flex-wrapper {
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+
+        .custom-input-text {
+            margin: 20px;
+            width: 70px;
+        }
+    }
+    .custom-button {
+        width: 50%;
+    }
+    .result {
+        padding: 20px;
+    }
+}
