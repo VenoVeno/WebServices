@@ -243,12 +243,12 @@ function BarCodeCreation(barCodeString, barCodeHeight, barCodeThickness, barCode
         }
 
         // MONOCHROME IMAGE
-        const canvas = createCanvas(width, height + 20)
+        const canvas = createCanvas(width + 97, height + 20)
         const context = canvas.getContext('2d')
 
         // FILL CANVAS WITH WHITE
         context.fillStyle = "white";
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.rect(0, 0, canvas.width, canvas.height);
 
         let draw_bar = true
 
@@ -274,6 +274,63 @@ function BarCodeCreation(barCodeString, barCodeHeight, barCodeThickness, barCode
     code128_image(barCodeString, barCodeHeight, barCodeThickness, barCodeQuietZone)
 }
 
+const Barcode128Svg = (function () {
+    class Barcode128Svg {
+        constructor(barCodeString, barCodeHeight, barCodeThickness, barCodeQuietZone) {
+            this.barCodeString = barCodeString
+            this.factor = barCodeThickness
+            this.height = barCodeHeight
+            this.barCodeQuietZone = barCodeQuietZone
+        }
+        toString() {
+            var h = this.height, f = this.factor
+            var svg = "\n", x = 10 * f, sum = 104
+            var backupwidth
+
+            if (!this.barCodeQuietZone)
+                x = f
+            function draw(d) {
+                d.split("").forEach(function (n, i) {
+                    svg += (i % 2) ? "\n" :
+                        "<rect x=\"" + x + "\" y=\"0\" width=\"" + (+n * f) +
+                        "\" height=\"" + h + "\" />"
+                    backupwidth = x;
+                    x += +n * f
+                })
+            }
+            draw("211214")
+            this.barCodeString.split("").forEach(function (c, i) {
+                var l = lookup[c] || [0, ""]
+                sum += l[0] * (i + 1)
+                draw(l[1])
+            })
+            draw(data[sum % 103])
+            draw("23311129")
+
+            svg += "<text x=\"" + (backupwidth / 2) + "\" y=\"" + (this.height + 24) + "\" fill=\"black\" font-size=\"1.4em\" font-family=\"Ubuntu\">" + this.barCodeString + "</text>";
+
+            console.log(svg)
+            let end = x + f
+            if (!this.barCodeQuietZone)
+                end = x - 10 * f
+            return "<svg xmlns=\"http://www.w3.org/2000/svg\" " +
+                "xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" " +
+                "height=\"" + h + "px\" viewBox=\"0,0," + end + "," + (h + 30) +
+                "\">" + svg + "</svg>"
+        }
+        toDataUri() {
+            return "data:image/svg+xml;base64," + Buffer.from(this.toString()).toString('base64')
+        }
+    }
+
+    var lookup = {}, data = "212222222122222221121223121322131222122213122312132212221213221312231212112232122132122231113222123122123221223211221132221231213212223112312131311222321122321221312212322112322211212123212321232121111323131123131321112313132113132311211313231113231311112133112331132131113123113321133121313121211331231131213113213311213131311123311321331121312113312311332111314111221411431111111224111422121124121421141122141221112214112412122114122411142112142211241211221114413111241112134111111242121142121241114212124112124211411212421112421211212141214121412121111143111341131141114113114311411113411311113141114131311141411131".split(/(\d{6})/).filter(function (s) { return !!s });
+    for (var i = 32; i < 127; i++)
+        lookup[String.fromCharCode(i)] = [i - 32, data[i - 32]];
+
+    return Barcode128Svg;
+})();
+
 module.exports = {
-    BarCodeCreation
+    BarCodeCreation,
+    Barcode128Svg
 }

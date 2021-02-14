@@ -25,6 +25,7 @@ function cors()
         exit(0);
     }
 }
+include('/usr/share/phpqrcode/qrlib.php');
 
 // FOR POST METHOD
 $POST_REQUEST = $_SERVER['REQUEST_URI'];
@@ -124,6 +125,18 @@ switch ($method) {
                 $checksum = md5Algo($string);
 
                 $response->checksum = $checksum;
+                $JSON = json_encode($response);
+                echo $JSON;
+                break;
+
+            case '/captchaGeneration':
+                $string = $_GET["string"];
+
+                $response = new \stdClass();
+
+                $captcha_message = generateCaptcha($string);
+
+                $response->return_message = "Captcha Generation Success";
                 $JSON = json_encode($response);
                 echo $JSON;
                 break;
@@ -407,11 +420,300 @@ switch ($method) {
                 );
 
                 $response = new \stdClass();
-                $response->return_message = "Barcode Creation Success";
+                $response->fileName = "Barcode.png";
 
                 $JSON = json_encode($response);
                 echo $JSON;
 
+                break;
+
+            case '/qrCode':
+                $request_body = file_get_contents('php://input');
+                $input = json_decode($request_body, TRUE); //convert JSON into array
+
+                $qrCodeString = $input['data']['qrCodeString'];
+
+                QRcode::png($qrCodeString, "QRcode.png", "L", "6");
+                $response = new \stdClass();
+                $response->response_message = "QR-Code generation Success";
+
+                $JSON = json_encode($response);
+                echo $JSON;
+
+                break;
+
+            case '/electricalCalculator':
+                $request_body = file_get_contents('php://input');
+                $input = json_decode($request_body, TRUE); //convert JSON into array
+
+                $value = $input["data"]["value"];
+                $currentTypeIndex = intval($input["data"]["currentTypeIndex"]);
+
+                $response = new \stdClass();
+                if ($currentTypeIndex === 1) {
+                    $current = floatval($value["current"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $currentUnit = $value["current"][1];
+                    $voltageUnit = $value["voltage"][1];
+
+                    if ($currentUnit === "mA") $current = $current / 1000;
+                    elseif ($currentUnit === "kA") $current = $current * 1000;
+                    else $current = $current;
+
+                    if ($voltageUnit === "mV") $voltage = $voltage / 1000;
+                    elseif ($voltageUnit === "kV") $voltage = $voltage * 1000;
+                    else $voltage = $voltage;
+
+                    $power = $current * $voltage / 1000;
+                    $response->result->POWER_IN_KILOWATTS = sprintf("%g kW", $power);
+                    $response->result->POWER_IN_WATTS = sprintf("%g W", $power * 1000);
+                    $response->result->POWER_IN_MILLIWATTS = sprintf("%g mW", $power * 1000 * 1000);
+                } elseif ($currentTypeIndex === 2) {
+                    $current = floatval($value["current"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $response->result->POWER_IN_KILOVOLT_AMPS = sprintf("%g kVA", $current * $voltage / 1000);
+                } elseif ($currentTypeIndex === 3) {
+                    $current = floatval($value["current"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $response->result->POWER_IN_VOLT_AMPS = sprintf("%g VA", $current * $voltage);
+                } elseif ($currentTypeIndex === 4) {
+                    $current = floatval($value["current"][0]);
+                    $ohms = floatval($value["ohms"][0]);
+                    $response->result->VOLTAGE_IN_VOLTS = sprintf("%g V", $current * $ohms);
+                } elseif ($currentTypeIndex === 5) {
+                    $current = floatval($value["current"][0]);
+                    $power = floatval($value["power"][0]);
+                    $response->result->VOLTAGE_IN_VOLTS = sprintf("%g V", $power / $current);
+                } elseif ($currentTypeIndex === 6) {
+                    $current = floatval($value["current"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->MILLI_AMPERE_HOURS = sprintf("%g mAh", $current * $duration * 1000);
+                } elseif ($currentTypeIndex === 7) {
+                    $power = floatval($value["power"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $voltageUnit = $value["voltage"][1];
+                    if ($voltageUnit === "mV") $voltage = $voltage / 1000;
+                    elseif ($voltageUnit === "kV") $voltage = $voltage * 1000;
+                    else $voltage = $voltage;
+                    $amps = (1000 * $power) / $voltage;
+
+                    $response->result->CURRENT_IN_KILO_AMPS = sprintf("%g kA", $amps / 1000);
+                    $response->result->CURRENT_IN_AMPS = sprintf("%g A", $amps);
+                    $response->result->CURRENT_IN_MILLI_AMPS = sprintf("%g mA", $amps * 1000);
+                } elseif ($currentTypeIndex === 8) {
+                    $power = floatval($value["power"][0]);
+                    $powerFactor = floatval($value["powerFactor"][0]);
+                    if ($powerFactor < 0 || $powerFactor > 1)
+                        $response->result->OUT_OF_RANGE = "Enter Power Factor Between 0 to 1 (inclusive)";
+                    $response->result->APPARENT_POWER_IN_KILOVOLT_AMPS = sprintf("%g kVA", $power / $powerFactor);
+                } elseif ($currentTypeIndex === 9) {
+                    $power = floatval($value["power"][0]);
+                    $powerFactor = floatval($value["powerFactor"][0]);
+                    if ($powerFactor < 0 || $powerFactor > 1)
+                        $response->result->OUT_OF_RANGE = "Enter Power Factor Between 0 to 1 (inclusive)";
+                    $response->result->APPARENT_POWER_IN_VOLT_AMPS = sprintf("%g VA", (1000 * $power) / $powerFactor);
+                } elseif ($currentTypeIndex === 10) {
+                    $power = floatval($value["power"][0]);
+                    $current = floatval($value["current"][0]);
+                    $response->result->VOLTAGE_IN_VOLTS = sprintf("%g V", (1000 * $power) / $current);
+                } elseif ($currentTypeIndex === 11) {
+                    $power = floatval($value["power"][0]);
+                    $response->result->POWER_IN_WATTS = sprintf("%g W", 1000 * $power);
+                } elseif ($currentTypeIndex === 12) {
+                    $power = floatval($value["power"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->ENERGY_IN_JOULES = sprintf("%g J", 1000 * $power * $duration);
+                } elseif ($currentTypeIndex === 13) {
+                    $power = floatval($value["power"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->ENERGY_IN_WATT_HOUR = sprintf("%g Wh", 1000 * $power * $duration);
+                } elseif ($currentTypeIndex === 14) {
+                    $power = floatval($value["power"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $response->result->CURRENT_IN_AMPS = sprintf("%g A", (1000 * $power) / $voltage);
+                } elseif ($currentTypeIndex === 15) {
+                    $power = floatval($value["power"][0]);
+                    $powerFactor = floatval($value["powerFactor"][0]);
+                    if ($powerFactor < 0 || $powerFactor > 1)
+                        $response->result->OUT_OF_RANGE = "Enter Power Factor Between 0 to 1 (inclusive)";
+                    $response->result->REAL_POWER_IN_KILO_WATTS = sprintf("%g kW", $power * $powerFactor);
+                } elseif ($currentTypeIndex === 16) {
+                    $power = floatval($value["power"][0]);
+                    $response->result->APPARENT_POWER_IN_VOLT_AMPERE = sprintf("%g VA", 1000 * $power);
+                } elseif ($currentTypeIndex === 17) {
+                    $power = floatval($value["power"][0]);
+                    $current = floatval($value["current"][0]);
+                    $phaseNumber = intval($value["selections"]["PhaseNumber"]);
+                    if ($phaseNumber === 1) $response->result->VOLTAGE_LINE_TO_NEUTRAL = sprintf("%g V", ($power * 1000) / $current);
+                    elseif ($phaseNumber === 2) $response->result->VOLTAGE_LINE_TO_NEUTRAL = sprintf("%g V", ($power * 1000) / ($current * 2));
+                    else $response->result->VOLTAGE_LINE_TO_LINE = sprintf("%g V", ($power * 1000) / ($current * sqrt(3)));
+                } elseif ($currentTypeIndex === 18) {
+                    $power = floatval($value["power"][0]);
+                    $powerFactor = floatval($value["powerFactor"][0]);
+                    if ($powerFactor < 0 || $powerFactor > 1)
+                        $response->result->OUT_OF_RANGE = "Enter Power Factor Between 0 to 1 (inclusive)";
+                    $response->result->REAL_POWER_IN_WATTS = sprintf("%g W", 1000 * $power * $powerFactor);
+                } elseif ($currentTypeIndex === 19) {
+                    $power = floatval($value["power"][0]);
+                    $response->result->JOULES_PER_SECOND = sprintf("%g J/s", 1000 * $power);
+                } elseif ($currentTypeIndex === 20) {
+                    $power = floatval($value["power"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $response->result->CURRENT_IN_AMPS = sprintf("%g A", $power / $voltage);
+                } elseif ($currentTypeIndex === 21) {
+                    $power = floatval($value["power"][0]);
+                    $powerFactor = floatval($value["powerFactor"][0]);
+                    if ($powerFactor < 0 || $powerFactor > 1)
+                        $response->result->OUT_OF_RANGE = "Enter Power Factor Between 0 to 1 (inclusive)";
+                    $response->result->REAL_POWER_IN_KILO_WATTS = sprintf("%g kW", ($power * $powerFactor) / 1000);
+                } elseif ($currentTypeIndex === 22) {
+                    $power = floatval($value["power"][0]);
+                    $response->result->APPARENT_POWER_IN_KILO_VOLT_AMPERE = sprintf("%g kVA", $power / 1000);
+                } elseif ($currentTypeIndex === 23) {
+                    $power = floatval($value["power"][0]);
+                    $current = floatval($value["current"][0]);
+                    $phaseNumber = intval($value["selections"]["PhaseNumber"]);
+                    if ($phaseNumber === 1) $response->result->VOLTAGE_LINE_TO_NEUTRAL = sprintf("%g V", $power / $current);
+                    elseif ($phaseNumber === 2) $response->result->VOLTAGE_LINE_TO_NEUTRAL = sprintf("%g V", $power / ($current * 2));
+                    else $response->result->VOLTAGE_LINE_TO_LINE = sprintf("%g V", $power / ($current * sqrt(3)));
+                } elseif ($currentTypeIndex === 24) {
+                    $power = floatval($value["power"][0]);
+                    $powerFactor = floatval($value["powerFactor"][0]);
+
+                    if ($powerFactor < 0 || $powerFactor > 1)
+                        $response->result->OUT_OF_RANGE = "Enter Power Factor Between 0 to 1 (inclusive)";
+                    $response->result->REAL_POWER_IN_WATTS = sprintf("%g W", $power * $powerFactor);
+                } elseif ($currentTypeIndex === 25) {
+                    $power = floatval($value["power"][0]);
+                    $response->result->JOULES_PER_HOUR = sprintf("%g J/h", $power * 3600);
+                    $response->result->JOULES_PER_SECOND = sprintf("%g J/s", $power);
+                } elseif ($currentTypeIndex === 26) {
+                    $voltage = floatval($value["voltage"][0]);
+                    $ohms = floatval($value["ohms"][0]);
+                    $response->result->CURRENT_IN_AMPS = sprintf("%g A", $voltage / $ohms);
+                } elseif ($currentTypeIndex === 27) {
+                    $voltage = floatval($value["voltage"][0]);
+                    $power = floatval($value["power"][0]);
+                    $response->result->CURRENT_IN_AMPS = sprintf("%g A", $power / $voltage);
+                } elseif ($currentTypeIndex === 28) {
+                    $voltage = floatval($value["voltage"][0]);
+                    $current = floatval($value["current"][0]);
+                    $response->result->POWER_IN_KILOWATTS = sprintf("%g kW", ($voltage * $current) / 1000);
+                } elseif ($currentTypeIndex === 29) {
+                    $voltage = floatval($value["voltage"][0]);
+                    $current = floatval($value["current"][0]);
+                    $phaseNumber = intval($value["selections"]["PhaseNumber"]);
+                    if ($phaseNumber === 1) $response->result->POWER_IN_KILO_VOLT_AMPERE_SINGLE_PHASE = sprintf("%g kVA", ($voltage * $current) / 1000);
+                    elseif ($phaseNumber === 2) $response->result->POWER_IN_KILO_VOLT_AMPERE_BI_PHASE = sprintf("%g kVA", (2 * $voltage * $current) / 1000);
+                    else $response->result->POWER_IN_KILO_VOLT_AMPERE_THREE_PHASE = sprintf("%g kVA", (sqrt(3) * $voltage * $current) / 1000);
+                } elseif ($currentTypeIndex === 30) {
+                    $voltage = floatval($value["voltage"][0]);
+                    $current = floatval($value["current"][0]);
+                    $phaseNumber = intval($value["selections"]["PhaseNumber"]);
+
+                    if ($phaseNumber === 1) $response->result->POWER_IN_VOLT_AMPERE_SINGLE_PHASE = sprintf("%g VA", $voltage * $current);
+                    elseif ($phaseNumber === 2) $response->result->POWER_IN_VOLT_AMPERE_BI_PHASE = sprintf("%g VA", 2 * $voltage * $current);
+                    else $response->result->POWER_IN_VOLT_AMPERE_THREE_PHASE = sprintf("%g VA", sqrt(3) * $voltage * $current);
+                } elseif ($currentTypeIndex === 31) {
+                    $voltage = floatval($value["voltage"][0]);
+                    $current = floatval($value["current"][0]);
+                    $response->result->POWER_IN_WATTS = sprintf("%g W", $voltage * $current);
+                } elseif ($currentTypeIndex === 32) {
+                    $voltage = floatval($value["voltage"][0]);
+                    $coulombs = floatval($value["coulombs"][0]);
+                    $response->result->ENERGY_IN_JOULES = sprintf("%g J", $voltage * $coulombs);
+                } elseif ($currentTypeIndex === 33) {
+                    $power = floatval($value["power"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $voltageUnit = $value["voltage"][1];
+
+                    if ($voltageUnit === "mV") $voltage = $voltage / 1000;
+                    elseif ($voltageUnit === "kV") $voltage = $voltage * 1000;
+                    else $voltage = $voltage;
+
+                    $amps = $power / $voltage;
+                    $response->result->CURRENT_IN_KILO_AMPS =  sprintf("%g kA", $amps / 1000);
+                    $response->result->CURRENT_IN_AMPS =  sprintf("%g A", $amps);
+                    $response->result->CURRENT_IN_MILLI_AMPS =  sprintf("%g mA", $amps * 1000);
+                } elseif ($currentTypeIndex === 34) {
+                    $power = floatval($value["power"][0]);
+                    $response->result->POWER_IN_KILO_WATT = sprintf("%g kW", $power / 1000);
+                } elseif ($currentTypeIndex === 35) {
+                    $power = floatval($value["power"][0]);
+                    $powerFactor = floatval($value["powerFactor"][0]);
+                    if ($powerFactor < 0 || $powerFactor > 1)
+                        $response->result->OUT_OF_RANGE = "Enter Power Factor Between 0 to 1 (inclusive)";
+                    $response->result->APPARENT_POWER_IN_KILO_VOLT_AMPERE = sprintf("%g kVA", $power / (1000 * $powerFactor));
+                } elseif ($currentTypeIndex === 36) {
+                    $power = floatval($value["power"][0]);
+                    $powerFactor = floatval($value["powerFactor"][0]);
+                    if ($powerFactor < 0 || $powerFactor > 1)
+                        $response->result->OUT_OF_RANGE = "Enter Power Factor Between 0 to 1 (inclusive)";
+                    $response->result->APPARENT_POWER_IN_VOLT_AMPERE = sprintf("%g VA", $power / $powerFactor);
+                } elseif ($currentTypeIndex === 37) {
+                    $power = floatval($value["power"][0]);
+                    $current = floatval($value["current"][0]);
+                    $response->result->VOLTAGE_IN_VOLTS = sprintf("%g V", $power / $current);
+                } elseif ($currentTypeIndex === 38) {
+                    $power = floatval($value["power"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->ENERGY_IN_JOULES = sprintf("%g J", $power * $duration);
+                } elseif ($currentTypeIndex === 39) {
+                    $power = floatval($value["power"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->ENERGY_IN_WATT_HOUR = sprintf("%g Wh", $power * $duration);
+                } elseif ($currentTypeIndex === 40) {
+                    $joules = floatval($value["joules"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $response->result->CURRENT_IN_AMPS = sprintf("%g A", $joules / $voltage);
+                } elseif ($currentTypeIndex === 41) {
+                    $joules = floatval($value["joules"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->POWER_IN_KILO_WATT = sprintf("%g kW", $joules / (1000 * $duration));
+                } elseif ($currentTypeIndex === 42) {
+                    $joules = floatval($value["joules"][0]);
+                    $response->result->POWER_IN_KILO_VOLT_AMPERE = sprintf("%g kVA", $joules * 0.001);
+                } elseif ($currentTypeIndex === 43) {
+                    $joules = floatval($value["joules"][0]);
+                    $response->result->POWER_IN_VOLT_AMPS = sprintf("%g VA", $joules);
+                } elseif ($currentTypeIndex === 44) {
+                    $joules = floatval($value["joules"][0]);
+                    $coulombs = floatval($value["coulombs"][0]);
+                    $response->result->VOLTAGE_IN_VOLTS = sprintf("%g V", $joules / $coulombs);
+                } elseif ($currentTypeIndex === 45) {
+                    $joules = floatval($value["joules"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->POWER_IN_WATTS = sprintf("%g W", $joules / $duration);
+                } elseif ($currentTypeIndex === 46) {
+                    $joules = floatval($value["joules"][0]);
+                    $response->result->ENERGY_IN_WATT_HOUR = sprintf("%g Wh", $joules / 3600);
+                } elseif ($currentTypeIndex === 47) {
+                    $mAh = floatval($value["mAh"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->CURRENT_IN_AMPS = sprintf("%g A", $mAh / ($duration * 1000));
+                } elseif ($currentTypeIndex === 48) {
+                    $mAh = floatval($value["mAh"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $response->result->ENERGY_IN_WATT_HOUR = sprintf("%g Wh", ($mAh * $voltage) / 1000);
+                } elseif ($currentTypeIndex === 49) {
+                    $energy = floatval($value["energy"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->POWER_IN_KILO_WATT = sprintf("%g kW", $energy / (1000 * $duration));
+                } elseif ($currentTypeIndex === 50) {
+                    $energy = floatval($value["energy"][0]);
+                    $duration = floatval($value["duration"][0]);
+                    $response->result->POWER_IN_WATT = sprintf("%g W", $energy / $duration);
+                } elseif ($currentTypeIndex === 51) {
+                    $energy = floatval($value["energy"][0]);
+                    $response->result->JOULE = sprintf("%g J", $energy * 3600);
+                } elseif ($currentTypeIndex === 52) {
+                    $energy = floatval($value["energy"][0]);
+                    $voltage = floatval($value["voltage"][0]);
+                    $response->result->ELECTRICAL_CHARGE_IN_MILLIAMP_HOURS = sprintf("%g mAh", (1000 * $energy) / $voltage);
+                }
+
+                $JSON = json_encode($response);
+                echo $JSON;
                 break;
 
             case '/mathLog1':
@@ -764,168 +1066,355 @@ function DECRYPT_RSA($pk, $ciphertext)
 
 function md5Algo($string)
 {
-    function rhex($num)
+    class MD5
     {
-        $hex_char_array = "0123456789abcdef";
-        $str = "";
-        for ($j = 0; $j <= 3; $j += 1) {
-            $str .= $hex_char_array[($num >> ($j * 8 + 4)) & 0x0F] . $hex_char_array[($num >> ($j * 8)) & 0x0F];
+
+        private $A = "67452301";
+        private $B = "efcdab89";
+        private $C = "98badcfe";
+        private $D = "10325476";
+
+        private $buffer = "";
+        private $length = 0;
+
+        public function pump(string $string)
+        {
+            return $this->calculate($this->convertToArray($string));
         }
-        return $str;
+
+        // Calculate words
+        private function calculate(array $words)
+        {
+            $A = $this->A;
+            $B = $this->B;
+            $C = $this->C;
+            $D = $this->D;
+
+            for ($i = 0; $i <= count($words) / 16 - 1; $i++) {
+                $this->A  = $A;
+                $this->B  = $B;
+                $this->C  = $C;
+                $this->D  = $D;
+
+                /* ROUND 1 */
+                $this->FF($A, $B, $C, $D, $words[0 + ($i * 16)], 7, "d76aa478");
+                $this->FF($D, $A, $B, $C, $words[1 + ($i * 16)], 12, "e8c7b756");
+                $this->FF($C, $D, $A, $B, $words[2 + ($i * 16)], 17, "242070db");
+                $this->FF($B, $C, $D, $A, $words[3 + ($i * 16)], 22, "c1bdceee");
+                $this->FF($A, $B, $C, $D, $words[4 + ($i * 16)], 7, "f57c0faf");
+                $this->FF($D, $A, $B, $C, $words[5 + ($i * 16)], 12, "4787c62a");
+                $this->FF($C, $D, $A, $B, $words[6 + ($i * 16)], 17, "a8304613");
+                $this->FF($B, $C, $D, $A, $words[7 + ($i * 16)], 22, "fd469501");
+                $this->FF($A, $B, $C, $D, $words[8 + ($i * 16)], 7, "698098d8");
+                $this->FF($D, $A, $B, $C, $words[9 + ($i * 16)], 12, "8b44f7af");
+                $this->FF($C, $D, $A, $B, $words[10 + ($i * 16)], 17, "ffff5bb1");
+                $this->FF($B, $C, $D, $A, $words[11 + ($i * 16)], 22, "895cd7be");
+                $this->FF($A, $B, $C, $D, $words[12 + ($i * 16)], 7, "6b901122");
+                $this->FF($D, $A, $B, $C, $words[13 + ($i * 16)], 12, "fd987193");
+                $this->FF($C, $D, $A, $B, $words[14 + ($i * 16)], 17, "a679438e");
+                $this->FF($B, $C, $D, $A, $words[15 + ($i * 16)], 22, "49b40821");
+
+                /* ROUND 2 */
+                $this->GG($A, $B, $C, $D, $words[1 + ($i * 16)], 5, "f61e2562");
+                $this->GG($D, $A, $B, $C, $words[6 + ($i * 16)], 9, "c040b340");
+                $this->GG($C, $D, $A, $B, $words[11 + ($i * 16)], 14, "265e5a51");
+                $this->GG($B, $C, $D, $A, $words[0 + ($i * 16)], 20, "e9b6c7aa");
+                $this->GG($A, $B, $C, $D, $words[5 + ($i * 16)], 5, "d62f105d");
+                $this->GG($D, $A, $B, $C, $words[10 + ($i * 16)], 9, "2441453");
+                $this->GG($C, $D, $A, $B, $words[15 + ($i * 16)], 14, "d8a1e681");
+                $this->GG($B, $C, $D, $A, $words[4 + ($i * 16)], 20, "e7d3fbc8");
+                $this->GG($A, $B, $C, $D, $words[9 + ($i * 16)], 5, "21e1cde6");
+                $this->GG($D, $A, $B, $C, $words[14 + ($i * 16)], 9, "c33707d6");
+                $this->GG($C, $D, $A, $B, $words[3 + ($i * 16)], 14, "f4d50d87");
+                $this->GG($B, $C, $D, $A, $words[8 + ($i * 16)], 20, "455a14ed");
+                $this->GG($A, $B, $C, $D, $words[13 + ($i * 16)], 5, "a9e3e905");
+                $this->GG($D, $A, $B, $C, $words[2 + ($i * 16)], 9, "fcefa3f8");
+                $this->GG($C, $D, $A, $B, $words[7 + ($i * 16)], 14, "676f02d9");
+                $this->GG($B, $C, $D, $A, $words[12 + ($i * 16)], 20, "8d2a4c8a");
+
+                /* ROUND 3 */
+                $this->HH($A, $B, $C, $D, $words[5 + ($i * 16)], 4, "fffa3942");
+                $this->HH($D, $A, $B, $C, $words[8 + ($i * 16)], 11, "8771f681");
+                $this->HH($C, $D, $A, $B, $words[11 + ($i * 16)], 16, "6d9d6122");
+                $this->HH($B, $C, $D, $A, $words[14 + ($i * 16)], 23, "fde5380c");
+                $this->HH($A, $B, $C, $D, $words[1 + ($i * 16)], 4, "a4beea44");
+                $this->HH($D, $A, $B, $C, $words[4 + ($i * 16)], 11, "4bdecfa9");
+                $this->HH($C, $D, $A, $B, $words[7 + ($i * 16)], 16, "f6bb4b60");
+                $this->HH($B, $C, $D, $A, $words[10 + ($i * 16)], 23, "bebfbc70");
+                $this->HH($A, $B, $C, $D, $words[13 + ($i * 16)], 4, "289b7ec6");
+                $this->HH($D, $A, $B, $C, $words[0 + ($i * 16)], 11, "eaa127fa");
+                $this->HH($C, $D, $A, $B, $words[3 + ($i * 16)], 16, "d4ef3085");
+                $this->HH($B, $C, $D, $A, $words[6 + ($i * 16)], 23, "4881d05");
+                $this->HH($A, $B, $C, $D, $words[9 + ($i * 16)], 4, "d9d4d039");
+                $this->HH($D, $A, $B, $C, $words[12 + ($i * 16)], 11, "e6db99e5");
+                $this->HH($C, $D, $A, $B, $words[15 + ($i * 16)], 16, "1fa27cf8");
+                $this->HH($B, $C, $D, $A, $words[2 + ($i * 16)], 23, "c4ac5665");
+
+                /* ROUND 4 */
+                $this->II($A, $B, $C, $D, $words[0 + ($i * 16)], 6, "f4292244");
+                $this->II($D, $A, $B, $C, $words[7 + ($i * 16)], 10, "432aff97");
+                $this->II($C, $D, $A, $B, $words[14 + ($i * 16)], 15, "ab9423a7");
+                $this->II($B, $C, $D, $A, $words[5 + ($i * 16)], 21, "fc93a039");
+                $this->II($A, $B, $C, $D, $words[12 + ($i * 16)], 6, "655b59c3");
+                $this->II($D, $A, $B, $C, $words[3 + ($i * 16)], 10, "8f0ccc92");
+                $this->II($C, $D, $A, $B, $words[10 + ($i * 16)], 15, "ffeff47d");
+                $this->II($B, $C, $D, $A, $words[1 + ($i * 16)], 21, "85845dd1");
+                $this->II($A, $B, $C, $D, $words[8 + ($i * 16)], 6, "6fa87e4f");
+                $this->II($D, $A, $B, $C, $words[15 + ($i * 16)], 10, "fe2ce6e0");
+                $this->II($C, $D, $A, $B, $words[6 + ($i * 16)], 15, "a3014314");
+                $this->II($B, $C, $D, $A, $words[13 + ($i * 16)], 21, "4e0811a1");
+                $this->II($A, $B, $C, $D, $words[4 + ($i * 16)], 6, "f7537e82");
+                $this->II($D, $A, $B, $C, $words[11 + ($i * 16)], 10, "bd3af235");
+                $this->II($C, $D, $A, $B, $words[2 + ($i * 16)], 15, "2ad7d2bb");
+                $this->II($B, $C, $D, $A, $words[9 + ($i * 16)], 21, "eb86d391");
+
+                $A = $this->addUnsigned($this->hexdec2($A), $this->hexdec2($this->A));
+                $B = $this->addUnsigned($this->hexdec2($B), $this->hexdec2($this->B));
+                $C = $this->addUnsigned($this->hexdec2($C), $this->hexdec2($this->C));
+                $D = $this->addUnsigned($this->hexdec2($D), $this->hexdec2($this->D));
+            }
+
+            $this->A = $A;
+            $this->B = $B;
+            $this->C = $C;
+            $this->D = $D;
+        }
+
+        // Finalize context
+        public function finalize(): string
+        {
+            $this->calculate($this->convertToArray('', true));
+            $md5 = $this->WordToHex($this->A) . $this->WordToHex($this->B) . $this->WordToHex($this->C) . $this->WordToHex($this->D);
+            return $md5;
+        }
+
+        // Convert word to HEX
+        private function WordToHex(string $lValue): string
+        {
+            $WordToHexValue = "";
+            for ($lCount = 0; $lCount <= 3; $lCount++) {
+                $lByte = ($this->hexdec2($lValue) >> ($lCount * 8)) & 255;
+                $C = dechex($lByte);
+                $WordToHexValue .= (strlen($C) == '1') ? "0" . dechex($lByte) : dechex($lByte);
+            }
+            return $WordToHexValue;
+        }
+
+        // F(X,Y,Z) = XY v not(X) Z (X AND Y OR NOT X AND Z)
+        private function F($X, $Y, $Z): string
+        {
+            $X = $this->hexdec2($X);
+            $Y = $this->hexdec2($Y);
+            $Z = $this->hexdec2($Z);
+            $calc = (($X & $Y) | ((~$X) & $Z));
+            return  $calc;
+        }
+
+        // G(X,Y,Z) = XZ v Y not(Z) (X AND Z OR Y AND NOT Z)
+        private function G($X, $Y, $Z)
+        {
+            $X = $this->hexdec2($X);
+            $Y = $this->hexdec2($Y);
+            $Z = $this->hexdec2($Z);
+            $calc = (($X & $Z) | ($Y & (~$Z)));
+            return  $calc;
+        }
+
+        // H(X,Y,Z) = X xor Y xor Z (X XOR Y XOR Z)
+        private function H($X, $Y, $Z)
+        {
+            $X = $this->hexdec2($X);
+            $Y = $this->hexdec2($Y);
+            $Z = $this->hexdec2($Z);
+            $calc = ($X ^ $Y ^ $Z);
+            return  $calc;
+        }
+
+        // I(X,Y,Z) = Y xor (X v not(Z))
+        private function I($X, $Y, $Z)
+        {
+            $X = $this->hexdec2($X);
+            $Y = $this->hexdec2($Y);
+            $Z = $this->hexdec2($Z);
+            $calc = ($Y ^ ($X | (~$Z)));
+            return  $calc;
+        }
+
+        // Add unsigned
+        private function addUnsigned($lX, $lY)
+        {
+            $lX8 = ($lX & 0x80000000);
+            $lY8 = ($lY & 0x80000000);
+            $lX4 = ($lX & 0x40000000);
+            $lY4 = ($lY & 0x40000000);
+            $lResult = ($lX & 0x3FFFFFFF) + ($lY & 0x3FFFFFFF);
+
+            if ($lX4 & $lY4) {
+                $res = ($lResult ^ 0x80000000 ^ $lX8 ^ $lY8);
+                if ($res < 0)
+                    return '-' . dechex(abs($res));
+                else
+                    return dechex($res);
+            }
+            if ($lX4 | $lY4) {
+                if ($lResult & 0x40000000) {
+                    $res = ($lResult ^ 0xC0000000 ^ $lX8 ^ $lY8);
+                    if ($res < 0)
+                        return '-' . dechex(abs($res));
+                    else
+                        return dechex($res);
+                } else {
+                    $res = ($lResult ^ 0x40000000 ^ $lX8 ^ $lY8);
+                    if ($res < 0)
+                        return '-' . dechex(abs($res));
+                    else
+                        return dechex($res);
+                }
+            } else {
+                $res = ($lResult ^ $lX8 ^ $lY8);
+                if ($res < 0)
+                    return '-' . dechex(abs($res));
+                else
+                    return dechex($res);
+            }
+        }
+
+        // Convert hex to decimal
+        protected function hexdec2($hex)
+        {
+            if (substr($hex, 0, 1) == "-") {
+                return doubleval('-' . hexdec("0x" . str_replace("-", "", $hex)));
+            }
+
+            return hexdec("0x" . $hex);
+        }
+
+        private function FF(&$A, $B, $C, $D, $M, $s, $t)
+        {
+            $Level1 = $this->hexdec2($this->addUnsigned($this->F($B, $C, $D), bindec($M)));
+            $level2 = $this->hexdec2($this->addUnsigned($Level1, $this->hexdec2($t)));
+            $A = $this->hexdec2($this->addUnsigned($this->hexdec2($A), $level2));
+            $A = $this->rotate($A, $s);
+            $A =  $this->addUnsigned($A, $this->hexdec2($B));
+        }
+
+        private function GG(&$A, $B, $C, $D, $M, $s, $t)
+        {
+            $Level1 = $this->hexdec2($this->addUnsigned($this->G($B, $C, $D), bindec($M)));
+            $level2 = $this->hexdec2($this->addUnsigned($Level1, $this->hexdec2($t)));
+            $A = $this->hexdec2($this->addUnsigned($this->hexdec2($A), $level2));
+            $A = $this->rotate($A, $s);
+            $A =  $this->addUnsigned($A, $this->hexdec2($B));
+        }
+
+        function HH(&$A, $B, $C, $D, $M, $s, $t)
+        {
+            $Level1 = $this->hexdec2($this->addUnsigned($this->H($B, $C, $D), bindec($M)));
+            $level2 = $this->hexdec2($this->addUnsigned($Level1, $this->hexdec2($t)));
+            $A = $this->hexdec2($this->addUnsigned($this->hexdec2($A), $level2));
+            $A = $this->rotate($A, $s);
+            $A =  $this->addUnsigned($A, $this->hexdec2($B));
+        }
+
+        function II(&$A, $B, $C, $D, $M, $s, $t)
+        {
+            $Level1 = $this->hexdec2($this->addUnsigned($this->I($B, $C, $D), bindec($M)));
+            $level2 = $this->hexdec2($this->addUnsigned($Level1, $this->hexdec2($t)));
+            $A = $this->hexdec2($this->addUnsigned($this->hexdec2($A), $level2));
+            $A = $this->rotate($A, $s);
+            $A =  $this->addUnsigned($A, $this->hexdec2($B));
+        }
+
+        function rotate($decimal, $bits)
+        {
+            return (($decimal << $bits) |  $this->shiftright($decimal, (32 - $bits))  & 0xffffffff);
+        }
+
+        // Right shift
+        private function shiftright($decimal, $right)
+        {
+            if ($decimal < 0) {
+                $res = decbin($decimal >> $right);
+
+                for ($i = 0; $i < $right; $i++) {
+                    $res[$i] = "";
+                }
+
+                return bindec($res);
+            }
+
+            return ($decimal >> $right);
+        }
+
+        // Convert to array
+        private function convertToArray(string $string, bool $final = false)
+        {
+            $lWordCount = 0;
+
+            if ($this->buffer) {
+                $string = $this->buffer . $string;
+                $this->buffer = '';
+            }
+
+            $lMessageLength = strlen($string);
+
+            if ($final === false) {
+                $cut = $lMessageLength % 32;
+                $this->buffer = substr($string, $lMessageLength - $cut);
+                $string = substr($string, 0, $lMessageLength - $cut);
+                $lMessageLength -= $cut;
+            }
+
+            $lNumberOfWords_temp1 = $lMessageLength + 8;
+            $lNumberOfWords_temp2 = ($lNumberOfWords_temp1 - ($lNumberOfWords_temp1 % 64)) / 64;
+            $lNumberOfWords = ($lNumberOfWords_temp2 + 1) * 16;
+
+            $lWordArray = [""];
+            $lBytePosition = 0;
+            $lByteCount = 0;
+
+            while ($lByteCount < $lMessageLength) {
+                $lWordCount = ($lByteCount - ($lByteCount % 4)) / 4;
+                $lBytePosition = ($lByteCount % 4) * 8;
+
+                if (!isset($lWordArray[$lWordCount])) {
+                    $lWordArray[$lWordCount] = 0;
+                }
+
+                $lWordArray[$lWordCount] = ($lWordArray[$lWordCount] | (ord($string[$lByteCount]) << $lBytePosition));
+                $lByteCount++;
+            }
+
+            $lWordCount = ($lByteCount - ($lByteCount % 4)) / 4;
+            $lBytePosition = ($lByteCount % 4) * 8;
+            $this->length += $lMessageLength;
+
+            if ($final === true) {
+                if (!isset($lWordArray[$lWordCount])) {
+                    $lWordArray[$lWordCount] = 0;
+                }
+
+                $lWordArray[$lWordCount] = $lWordArray[$lWordCount] | (0x80 << $lBytePosition);
+                $lWordArray[$lNumberOfWords - 2] = $this->length << 3;
+                $lWordArray[$lNumberOfWords - 1] = $this->length >> 29;
+            }
+
+            for ($i = 0; $i < $lNumberOfWords; $i++) {
+                if (isset($lWordArray[$i])) {
+                    $lWordArray[$i] = decbin($lWordArray[$i]);
+                } else if ($final === false) {
+                    return $lWordArray;
+                } else {
+                    $lWordArray[$i] = '0';
+                }
+            }
+
+            return $lWordArray;
+        }
     }
-
-    /*
-     * Convert a string to a sequence of 16-word blocks, stored as an array.
-     * Append padding bits and the length, as described in the MD5 standard.
-     */
-    function str2blks_MD5($str)
-    {
-        $nblk = ((strlen($str) + 8) >> 6) + 1;
-        // blks = new Array($nblk * 16);
-        $blks = [];
-        for ($i = 0; $i < $nblk * 16; $i += 1)
-            $blks[$i] = 0;
-        for ($i = 0; $i < strlen($str); $i += 1)
-            $blks[$i >> 2] |= ord($str[$i]) << (($i % 4) * 8);
-        $blks[$i >> 2] |= 0x80 << (($i % 4) * 8);
-        $blks[$nblk * 16 - 2] = strlen($str) * 8;
-        return $blks;
-    }
-
-    /*
-     * Add integers, wrapping at 2^32. This uses 16-bit operations internally 
-     * to work around bugs in some JS interpreters.
-     */
-    function add($x, $y)
-    {
-        $lsw = ($x & 0xFFFF) + ($y & 0xFFFF);
-        $msw = ($x >> 16) + ($y >> 16) + ($lsw >> 16);
-        return ($msw << 16) | ($lsw & 0xFFFF);
-    }
-
-    /*
-     * Bitwise rotate a 32-bit number to the left
-     */
-    function rol($num, $cnt)
-    {
-        return ($num << $cnt) | ($num >> (32 - $cnt));
-    }
-
-    /*
-     * These functions implement the basic operation for each round of the
-     * algorithm.
-     */
-    function cmn($q, $a, $b, $x, $s, $t)
-    {
-        return add(rol(add(add($a, $q), add($x, $t)), $s), $b);
-    }
-    function ff($a, $b, $c, $d, $x, $s, $t)
-    {
-        return cmn(($b & $c) | ((~$b) & $d), $a, $b, $x, $s, $t);
-    }
-    function gg($a, $b, $c, $d, $x, $s, $t)
-    {
-        return cmn(($b & $d) | ($c & (~$d)), $a, $b, $x, $s, $t);
-    }
-    function hh($a, $b, $c, $d, $x, $s, $t)
-    {
-        return cmn($b ^ $c ^ $d, $a, $b, $x, $s, $t);
-    }
-    function ii($a, $b, $c, $d, $x, $s, $t)
-    {
-        return cmn($c ^ ($b | (~$d)), $a, $b, $x, $s, $t);
-    }
-
-    /*
-     * Take a string and return the hex representation of its MD5.
-     */
-    $x = str2blks_MD5($string);
-    $a = 1732584193;
-    $b = -271733879;
-    $c = -1732584194;
-    $d = 271733878;
-
-    for ($i = 0; $i < count($x); $i += 16) {
-        $olda = $a;
-        $oldb = $b;
-        $oldc = $c;
-        $oldd = $d;
-
-        $a = ff($a, $b, $c, $d, $x[$i + 0], 7, -680876936);
-        $d = ff($d, $a, $b, $c, $x[$i + 1], 12, -389564586);
-        $c = ff($c, $d, $a, $b, $x[$i + 2], 17, 606105819);
-        $b = ff($b, $c, $d, $a, $x[$i + 3], 22, -1044525330);
-        $a = ff($a, $b, $c, $d, $x[$i + 4], 7, -176418897);
-        $d = ff($d, $a, $b, $c, $x[$i + 5], 12, 1200080426);
-        $c = ff($c, $d, $a, $b, $x[$i + 6], 17, -1473231341);
-        $b = ff($b, $c, $d, $a, $x[$i + 7], 22, -45705983);
-        $a = ff($a, $b, $c, $d, $x[$i + 8], 7, 1770035416);
-        $d = ff($d, $a, $b, $c, $x[$i + 9], 12, -1958414417);
-        $c = ff($c, $d, $a, $b, $x[$i + 10], 17, -42063);
-        $b = ff($b, $c, $d, $a, $x[$i + 11], 22, -1990404162);
-        $a = ff($a, $b, $c, $d, $x[$i + 12], 7, 1804603682);
-        $d = ff($d, $a, $b, $c, $x[$i + 13], 12, -40341101);
-        $c = ff($c, $d, $a, $b, $x[$i + 14], 17, -1502002290);
-        $b = ff($b, $c, $d, $a, $x[$i + 15], 22, 1236535329);
-
-        $a = gg($a, $b, $c, $d, $x[$i + 1], 5, -165796510);
-        $d = gg($d, $a, $b, $c, $x[$i + 6], 9, -1069501632);
-        $c = gg($c, $d, $a, $b, $x[$i + 11], 14, 643717713);
-        $b = gg($b, $c, $d, $a, $x[$i + 0], 20, -373897302);
-        $a = gg($a, $b, $c, $d, $x[$i + 5], 5, -701558691);
-        $d = gg($d, $a, $b, $c, $x[$i + 10], 9, 38016083);
-        $c = gg($c, $d, $a, $b, $x[$i + 15], 14, -660478335);
-        $b = gg($b, $c, $d, $a, $x[$i + 4], 20, -405537848);
-        $a = gg($a, $b, $c, $d, $x[$i + 9], 5, 568446438);
-        $d = gg($d, $a, $b, $c, $x[$i + 14], 9, -1019803690);
-        $c = gg($c, $d, $a, $b, $x[$i + 3], 14, -187363961);
-        $b = gg($b, $c, $d, $a, $x[$i + 8], 20, 1163531501);
-        $a = gg($a, $b, $c, $d, $x[$i + 13], 5, -1444681467);
-        $d = gg($d, $a, $b, $c, $x[$i + 2], 9, -51403784);
-        $c = gg($c, $d, $a, $b, $x[$i + 7], 14, 1735328473);
-        $b = gg($b, $c, $d, $a, $x[$i + 12], 20, -1926607734);
-
-        $a = hh($a, $b, $c, $d, $x[$i + 5], 4, -378558);
-        $d = hh($d, $a, $b, $c, $x[$i + 8], 11, -2022574463);
-        $c = hh($c, $d, $a, $b, $x[$i + 11], 16, 1839030562);
-        $b = hh($b, $c, $d, $a, $x[$i + 14], 23, -35309556);
-        $a = hh($a, $b, $c, $d, $x[$i + 1], 4, -1530992060);
-        $d = hh($d, $a, $b, $c, $x[$i + 4], 11, 1272893353);
-        $c = hh($c, $d, $a, $b, $x[$i + 7], 16, -155497632);
-        $b = hh($b, $c, $d, $a, $x[$i + 10], 23, -1094730640);
-        $a = hh($a, $b, $c, $d, $x[$i + 13], 4, 681279174);
-        $d = hh($d, $a, $b, $c, $x[$i + 0], 11, -358537222);
-        $c = hh($c, $d, $a, $b, $x[$i + 3], 16, -722521979);
-        $b = hh($b, $c, $d, $a, $x[$i + 6], 23, 76029189);
-        $a = hh($a, $b, $c, $d, $x[$i + 9], 4, -640364487);
-        $d = hh($d, $a, $b, $c, $x[$i + 12], 11, -421815835);
-        $c = hh($c, $d, $a, $b, $x[$i + 15], 16, 530742520);
-        $b = hh($b, $c, $d, $a, $x[$i + 2], 23, -995338651);
-
-        $a = ii($a, $b, $c, $d, $x[$i + 0], 6, -198630844);
-        $d = ii($d, $a, $b, $c, $x[$i + 7], 10, 1126891415);
-        $c = ii($c, $d, $a, $b, $x[$i + 14], 15, -1416354905);
-        $b = ii($b, $c, $d, $a, $x[$i + 5], 21, -57434055);
-        $a = ii($a, $b, $c, $d, $x[$i + 12], 6, 1700485571);
-        $d = ii($d, $a, $b, $c, $x[$i + 3], 10, -1894986606);
-        $c = ii($c, $d, $a, $b, $x[$i + 10], 15, -1051523);
-        $b = ii($b, $c, $d, $a, $x[$i + 1], 21, -2054922799);
-        $a = ii($a, $b, $c, $d, $x[$i + 8], 6, 1873313359);
-        $d = ii($d, $a, $b, $c, $x[$i + 15], 10, -30611744);
-        $c = ii($c, $d, $a, $b, $x[$i + 6], 15, -1560198380);
-        $b = ii($b, $c, $d, $a, $x[$i + 13], 21, 1309151649);
-        $a = ii($a, $b, $c, $d, $x[$i + 4], 6, -145523070);
-        $d = ii($d, $a, $b, $c, $x[$i + 11], 10, -1120210379);
-        $c = ii($c, $d, $a, $b, $x[$i + 2], 15, 718787259);
-        $b = ii($b, $c, $d, $a, $x[$i + 9], 21, -343485551);
-
-        $a = add($a, $olda);
-        $b = add($b, $oldb);
-        $c = add($c, $oldc);
-        $d = add($d, $oldd);
-    }
-
-    return rhex($a) . rhex($b) . rhex($c) . rhex($d);
+    $object = new MD5();
+    $object->pump($string);
+    return $object->finalize();
 }
 
 function generateBarCode($stringData, $height, $width, $barCodeQuietZone)
@@ -934,6 +1423,10 @@ function generateBarCode($stringData, $height, $width, $barCodeQuietZone)
 
     // 			QUIET ZONE		START CHAR				ENCODED DATA				CHECK DIGIT		STOP CHAR		QUIET ZONE
     $width = ($width * 10) + ($width * 11) + ($width * 11 * strlen($stringData)) + ($width * 11) + ($width * 13) + ($width * 10);
+
+    if (!$barCodeQuietZone) {
+        $width -= $xScale * 20;
+    }
 
     if ($height < 25) {                                                        // MAKE SURE THE HEIGHT IS A MINIMUM OF 0.25" (1PX ~ 0.010")
         $height = 25;
@@ -1077,10 +1570,12 @@ function generateBarCode($stringData, $height, $width, $barCodeQuietZone)
     imagefill($img, 0, 0, $white);                                        // MAKE BACKGROUND WHITE (FOR NOW)
 
     $x = 10 * $xScale;                                                    // KEEP TRACK OF THE X POSITION
+    if (!$barCodeQuietZone) $x = $xScale;
+
     $bar = true;                                                        // KEEP TRACK OF WHETHER IT'S A BAR OR SPACE
 
     foreach ($barcodeData as $barWidth) {                                    // ITERATE THROUGH BARS
-        $barWidth = (int)$barWidth * $xScale;
+        $barWidth = intval($barWidth) * $xScale;
         if ($bar) {                                                        // IF IT'S A BAR...
             while ($barWidth > 0) {                                            // DRAW A LINE FOR EACH WIDTH POINT
                 imageline($img, $x, 10, $x, $height, $black);
@@ -1130,6 +1625,90 @@ function randomOTP($OTP_TYPE, $OTP_LENGTH)
         $alphabetRandom .= $OTP_VALUE_ARRAY[intval($random * strlen($OTP_VALUE_ARRAY))];
     }
     return $alphabetRandom;
+}
+
+function generateCaptcha($string)
+{
+    session_start();
+
+    $_SESSION["string"] = $string;
+
+    $image = imagecreatetruecolor(200, 50);
+
+    imageantialias($image, true);
+
+    $colors = [];
+
+    $red = rand(125, 175);
+    $green = rand(125, 175);
+    $blue = rand(125, 175);
+
+    for ($i = 0; $i < 5; $i++) {
+        $colors[] = imagecolorallocate($image, $red - 20 * $i, $green - 20 * $i, $blue - 20 * $i);
+    }
+
+    imagefill($image, 0, 0, $colors[0]);
+
+    for ($i = 0; $i < 10; $i++) {
+        imagesetthickness($image, rand(2, 5));
+        $rect_color = $colors[rand(1, 4)];
+        imagerectangle($image, rand(-10, 190), rand(-10, 10), rand(-10, 190), rand(40, 60), $rect_color);
+    }
+
+
+    $black = imagecolorallocate($image, 0, 0, 0);
+    $white = imagecolorallocate($image, 255, 255, 255);
+    $textcolors = [$black, $white];
+
+    $fonts = ["/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf", "/usr/share/fonts/truetype/Sahadeva/sahadeva.ttf", "/usr/share/fonts/truetype/pagul/Pagul.ttf", "/usr/share/fonts/truetype/Nakula/nakula.ttf"];
+
+    $captcha_string = $string;
+    $string_length = strlen($string);
+
+    for ($i = 0; $i < $string_length; $i++) {
+        $letter_space = 170 / $string_length;
+        $initial = 15;
+
+        imagettftext($image, rand(24, 28), rand(-15, 15), $initial + $i * $letter_space, rand(20, 40), $textcolors[rand(0, 1)], $fonts[array_rand($fonts)], $captcha_string[$i]);
+    }
+
+    imagepng($image, "Captcha.png");
+
+    imagedestroy($image);
+
+    // GENERATE A 50X24 STANDARD CAPTCHA IMAGE 
+    // $im = imagecreatetruecolor(50, 24);
+
+    // // BLUE COLOR 
+    // $bg = imagecolorallocate($im, 22, 86, 165);
+
+    // // WHITE COLOR 
+    // $fg = imagecolorallocate($im, 255, 255, 255);
+
+    // // GIVE THE IMAGE A BLUE BACKGROUND 
+    // imagefill($im, 0, 0, $bg);
+
+    // // PRINT THE CAPTCHA TEXT IN THE IMAGE WITH RANDOM POSITION & SIZE 
+    // imagestring(
+    //     $im,
+    //     rand(1, 7),
+    //     rand(1, 7),
+    //     rand(1, 7),
+    //     $string,
+    //     $fg
+    // );
+
+    // // VERY IMPORTANT: Prevent any Browser Cache!! 
+    // header("Cache-Control: no-store, 
+    //         no-cache, must-revalidate");
+
+    // // The PHP-file will be rendered as image 
+    // header('Content-type: image/png');
+
+    // imagepng($im, "Captcha.png");
+
+    // // Free memory 
+    // imagedestroy($im);
 }
 
 function sinRadianFunc($sinRadian)

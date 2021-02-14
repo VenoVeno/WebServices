@@ -22,8 +22,8 @@ class MatrixOperation extends React.Component {
             rowCount: 3,
             columnCount: 3,
             matrixValue: "",
-            // matrixList: [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            matrixList: [],
+            matrixList: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            // matrixList: [],
             twoDimMatrix: [],
             setTheoryResult: []
         }

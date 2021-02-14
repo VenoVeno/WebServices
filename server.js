@@ -10,8 +10,10 @@ const { newMD5 } = require('./src/md5');
 const { numberToWords } = require('./src/numberToWords');
 const { randomOTP } = require('./src/randomOTP');
 const { captcha } = require('./src/captcha');
-const { BarCodeCreation } = require('./src/Barcode');
+const { Barcode128Svg } = require('./src/Barcode');
+
 const util = require('util')
+const fs = require('fs')
 
 const QRCode = require('qrcode')
 
@@ -351,19 +353,88 @@ app.get("/md5sum", function (req, res) {
 app.post('/barCode', function (req, res) {
     try {
         let { barCodeString, barCodeHeight, barCodeThickness, barCodeQuietZone } = req.body.data
+        const fileName = "Barcode.svg";
 
-        if (barCodeQuietZone == true) barCodeQuietZone = true
+        if (barCodeQuietZone == "true") barCodeQuietZone = true
         else barCodeQuietZone = false
 
-        BarCodeCreation(barCodeString, barCodeHeight, barCodeThickness, barCodeQuietZone)
+        // BarCodeCreation(barCodeString, barCodeHeight, barCodeThickness, barCodeQuietZone)
+
+        const code = new Barcode128Svg(barCodeString, barCodeHeight, barCodeThickness, barCodeQuietZone);
+        const base64String = code.toDataUri();
+
+        const base64Image = base64String.split(';base64,').pop();
+        fs.writeFileSync(fileName, base64Image, { encoding: 'base64' }, function (err) {
+            console.log('File created');
+        });
+
+        // const canvas = createCanvas(400, 200)
+        // const context = canvas.getContext('2d')
+
+        // var myImage = new Canvas.Image
+        // myImage.src = base64String;
+        // context.drawImage(myImage, 0, 0);
+
+        // const buffer = canvas.toBuffer('image/png')
+        // fs.writeFileSync(fileName, buffer)
 
         res.send({
+            "fileName": fileName,
             "return_message": "Barcode Creation Success"
         })
     } catch (error) {
         console.log("Some Error Occurred While Generating 128-bit Bar Code ", error)
     }
 })
+
+/*
+app.get("/temp", function (req, res) {
+    try {
+        // let str = "UJGug";
+        // encoder.addData(str)
+        // encoder.make();
+        // let img = encoder.createBase64()
+        // var base64Data = img.replace(/^data:image\/png;base64,/, "");
+        const code = new Barcode128Svg("Hi");
+        const base64String = code.toDataUri();
+
+        const base64Image = base64String.split(';base64,').pop();
+        fs.writeFile("Barcode.svg", base64Image, { encoding: 'base64' }, function (err) {
+            console.log('File created');
+        });
+
+        const imgBuffer = Buffer.from(base64Image, "base64");
+        fs.writeFile("Barcode.svg", imgBuffer, { encoding: 'base64' }, function (err) {
+            console.log('File created');
+        });
+
+        // const imageBufferData = Buffer.from(base64Image, "base64")
+        // var streamObj = new ReadableData()
+        // streamObj.push(imageBufferData)
+        // streamObj.push(null)
+        // streamObj.pipe(fs.createWriteStream("Barcode3.png"));
+        // streamObj.pipe(fs.createWriteStream("Barcode1.svg"));
+
+        // const canvas = createCanvas(400, 200)
+        // const context = canvas.getContext('2d')
+
+        // var myImage = new Canvas.Image
+        // myImage.src = base64String;
+        // context.drawImage(myImage, 0, 0);
+
+        // const buffer = canvas.toBuffer('image/png')
+        // fs.writeFileSync('./Barcode4.png', buffer)
+
+        res.send({
+            message: code.toString(),
+            message2: code.toDataUri()
+        })
+
+    } catch (error) {
+        console.log("Some Error", error)
+    }
+})
+*/
 
 app.post('/qrCode', function (req, res) {
     try {

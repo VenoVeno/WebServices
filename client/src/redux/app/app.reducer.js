@@ -5,16 +5,18 @@ const DEFAULT_EXERCISE = "Exercise-1"
 
 const DEFAULT_PROGRAM_SET_1 = "DateDifference"
 const DEFAULT_PROGRAM_SET_2 = "Electrical Calculator"
+const DEFAULT_PROGRAM_SET_3 = "Huffman Coding Techniques"
 
 const PROGRAM_SET_1 = [DEFAULT_PROGRAM_SET_1, "SetTheory", "MatrixOperation", "NumberToWordRupee", "RSA", "MD5", "128-bit Barcode", "QR-Code", "OTP", "Captcha"]
 const PROGRAM_SET_2 = [DEFAULT_PROGRAM_SET_2, "Math Log1", "Math Log2", "Math Log3", "Basic Statistics Calculator"]
+const PROGRAM_SET_3 = [DEFAULT_PROGRAM_SET_3, "Run-length Coding", "LZW", "Lossless Text Compression", "Fast Compression Algorithm for Unicode Text"]
 
 const INITIAL_STATE = {
     API_SERVER_LANGUAGES: { "javascript": DEFAULT_PORT, "python": 3002, "php": 3003 },
     API_SERVER_PORT: DEFAULT_PORT,
     PROGRAMS_AVAILABLE: PROGRAM_SET_1,
     CURRENT_PROGRAM_NAME: DEFAULT_PROGRAM_SET_1,
-    EXERCISE_AVAILABLE: [DEFAULT_EXERCISE, "Exercise-2"],
+    EXERCISE_AVAILABLE: [DEFAULT_EXERCISE, "Exercise-2", "Exercise-3"],
     CURRENT_EXERCISE: DEFAULT_EXERCISE
 }
 
@@ -38,9 +40,12 @@ const appReducer = (state = INITIAL_STATE, action) => {
                 CURRENT_PROGRAM_SET = PROGRAM_SET_1
                 CURRENT_PROGRAM_SET_NAME = DEFAULT_PROGRAM_SET_1
             }
-            else {
+            else if (action.payload === "SET_2") {
                 CURRENT_PROGRAM_SET = PROGRAM_SET_2
                 CURRENT_PROGRAM_SET_NAME = DEFAULT_PROGRAM_SET_2
+            } else {
+                CURRENT_PROGRAM_SET = PROGRAM_SET_3
+                CURRENT_PROGRAM_SET_NAME = DEFAULT_PROGRAM_SET_3
             }
 
             return {

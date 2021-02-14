@@ -344,7 +344,7 @@ class ElectricalCalculator extends React.Component {
                 "ohms": ["", "Ω"],
                 "duration": ["", "Hours"],
                 "power": ["", "W"],
-                "powerFactor": ["", ""],
+                "powerFactor": [0.16, ""],
                 "coulombs": ["", "C"],
                 "joules": ["", "J"],
                 "mAh": ["", "mAh"],
@@ -354,7 +354,8 @@ class ElectricalCalculator extends React.Component {
                 }
             },
             initialInputValues: {},
-            resultantJSON: ""
+            resultantJSON: "",
+            // resultantJSON1: ""
         }
     }
 
@@ -369,7 +370,10 @@ class ElectricalCalculator extends React.Component {
         this.setState({
             currentConversionName,
             resultantJSON: "",
+            // resultantJSON1: "",
             inputValues: _cloneDeep(this.state.initialInputValues)
+        }, () => {
+            // this.getValueForInput()
         })
     }
 
@@ -380,7 +384,8 @@ class ElectricalCalculator extends React.Component {
         inputValues[name][0] = value
         this.setState({
             inputValues,
-            resultantJSON: ""
+            resultantJSON: "",
+            // resultantJSON1: ""
         })
     }
 
@@ -391,7 +396,8 @@ class ElectricalCalculator extends React.Component {
         inputValues["selections"][name] = value
         this.setState({
             inputValues,
-            resultantJSON: ""
+            resultantJSON: "",
+            // resultantJSON1: ""
         })
     }
 
@@ -403,7 +409,8 @@ class ElectricalCalculator extends React.Component {
         inputValues[id][1] = value
         this.setState({
             inputValues,
-            resultantJSON: ""
+            resultantJSON: "",
+            // resultantJSON1: ""
         })
     }
 
@@ -426,6 +433,23 @@ class ElectricalCalculator extends React.Component {
                     resultantJSON: responseJSON.result
                 })
             })
+
+        // fetch(`${Properties.URL}:3003/electricalCalculator`, {
+        //     method: "POST", headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({
+        //         data: {
+        //             value: inputValues,
+        //             currentTypeIndex: conversions[currentConversionName]["TYPE"]
+        //         }
+        //     })
+        // })
+        //     .then(response => response.json())
+        //     .then(responseJSON => {
+        //         console.log(responseJSON)
+        //         this.setState({
+        //             resultantJSON1: responseJSON.result
+        //         })
+        //     })
     }
 
     render() {
@@ -517,6 +541,23 @@ class ElectricalCalculator extends React.Component {
                                 </div>
                                 : null
                         }
+                        {/* {
+                            resultantJSON1
+                                ?
+                                <div className="result">
+                                    {
+                                        Object.keys(resultantJSON1).map((key, index) => {
+                                            return (
+                                                <div className="row-span" key={index}>
+                                                    <div className="key">{key}</div>
+                                                    <div key={index} className="resultant-value">{resultantJSON1[key]}</div>
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div>
+                                : null
+                        } */}
                     </div>
                 </div>
             </div>

@@ -5,3 +5,4 @@
 test.*
 
 client/node_modules
+client/.gitignore

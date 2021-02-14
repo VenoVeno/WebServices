@@ -18,8 +18,10 @@ class ExerciseSelection extends React.Component {
         this.props.setCurrentExerciseName(EXERCISE_NAME)
         if (this.props.AVAILABLE_EXERCISE.indexOf(EXERCISE_NAME) === 0) {
             this.props.setAvailablePrograms("SET_1")
-        } else {
+        } else if(this.props.AVAILABLE_EXERCISE.indexOf(EXERCISE_NAME) === 1) {
             this.props.setAvailablePrograms("SET_2")
+        } else {
+            this.props.setAvailablePrograms("SET_3")
         }
     }
 

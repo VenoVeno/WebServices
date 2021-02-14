@@ -23,14 +23,14 @@ class BarCode128 extends React.Component {
             barCodeHeight: 100,
             barCodeThickness: 3,
             barCodeQuietZone: "true",
-            responseBarCode: ""
+            responseBarCodeFileName: ""
         }
     }
 
     updateBarcodeString = (barCodeString) => {
         this.setState({
             barCodeString,
-            responseBarCode: ""
+            responseBarCodeFileName: ""
         })
     }
 
@@ -38,14 +38,14 @@ class BarCode128 extends React.Component {
         const { name, value } = event.target
         this.setState({
             [name]: value,
-            responseBarCode: ""
+            responseBarCodeFileName: ""
         })
     }
 
     updateQuietZone = (barCodeQuietZoneValue) => {
         this.setState({
             barCodeQuietZone: barCodeQuietZoneValue,
-            responseBarCode: ""
+            responseBarCodeFileName: ""
         })
     }
 
@@ -68,12 +68,12 @@ class BarCode128 extends React.Component {
             .then(responseJSON => {
                 console.log(responseJSON)
                 this.setState({
-                    responseBarCode: responseJSON.return_message
+                    responseBarCodeFileName : responseJSON.fileName
                 })
             })
     }
     render() {
-        const { barCodeString, barCodeHeight, barCodeThickness, responseBarCode, barCodeQuietZone } = this.state
+        const { barCodeString, barCodeHeight, barCodeThickness, responseBarCodeFileName, barCodeQuietZone } = this.state
         return (
             <div className="barcode-128-container">
                 <div className="header">128 Bit Bar-Code</div>
@@ -103,8 +103,8 @@ class BarCode128 extends React.Component {
                         onClick={() => this.generateBarCode()}>Generate 128-Bit BarCode</CustomButton>
                 </div>
                 {
-                    responseBarCode
-                        ? <img key={shortid.generate()} src={`${Properties.URL}:3000/Barcode.png?random=${new Date().getMilliseconds()}`} alt="" />
+                    responseBarCodeFileName
+                        ? <img key={shortid.generate()} src={`${Properties.URL}:3000/${responseBarCodeFileName}?random=${new Date().getMilliseconds()}`} alt="" />
                         : null
                 }
             </div>

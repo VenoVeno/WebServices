@@ -239,7 +239,7 @@ def numberToWords(number):
         # RANGING FROM 1,00,000 - 99,99,999 -- One Lakh to Ninety Nine Lakhs Ninety Nine Thousand Nine Hundred Ninety Nine
         words += numberToWords(int(number / 100000)) + " Lakh"
         remainder = number % 100000
-        # } elif (number < 1000000000) {
+    # elif (number < 1000000000)
     elif (number >= 10000000):
         # RANGING FROM 1,00,00,000 - 99,99,99,999 -- One Crore to Ninety Nine Crores Ninety Nine Lakhs Ninety Nine Thousand Nine Hundred and Ninety Nine
         words += numberToWords(int(number / 10000000)) + " Crore"
@@ -384,8 +384,8 @@ def md5Algo(plainText):
                  4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
                  6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21]
 
-    constants = [int(abs(Math.sin(i+1)) * 4294967296)
-                 & 0xFFFFFFFF for i in range(64)]
+    nts = [int(abs(Math.sin(i+1)) * 4294967296)
+           & 0xFFFFFFFF for i in range(64)]
 
     def pad(msg):
         msg_len_in_bits = (8*len(msg)) & 0xffffffffffffffff
@@ -431,7 +431,7 @@ def md5Algo(plainText):
                 F = func(B, C, D)
                 G = index_func(i)
 
-                to_rotate = A + F + constants[i] + \
+                to_rotate = A + F + nts[i] + \
                     int.from_bytes(block[4*G: 4*G + 4], byteorder='little')
                 newB = (B + leftRotate(to_rotate, rotate_by[i])) & 0xFFFFFFFF
 
@@ -472,7 +472,7 @@ def barCode():
     generateBarCode(barCodeString, barCodeHeight,
                     barCodeThickness, barCodeQuietZone)
     return {
-        "return_message": "Barcode Creation Success"
+        "fileName": "Barcode.png"
     }
 
 
@@ -690,7 +690,7 @@ def qrCodeGenarator():
     qrCodeString = requestJSON['data']['qrCodeString']
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        error_correction=qrcode.nts.ERROR_CORRECT_L,
         box_size=6,
         border=4,
     )
@@ -741,7 +741,7 @@ def randomOTP(OTP_TYPE, OTP_LENGTH):
 def captchaGeneration():
     string = request.args["string"]
     # SETTING UP THE CANVAS BASE ELEMENTS
-    randInt = random.randint(10, 50)
+    randInt = random.randint(16, 50)
     length = len(string)
     img = np.zeros(((randInt*2)+5, length*randInt, 3), np.uint8)
     img_pil = Image.fromarray(img)
@@ -788,6 +788,573 @@ def captchaGeneration():
     # out.save('./Captcha.png')
 
     return {"return_message": "Captcha Generation Success"}
+
+
+@app.route('/electricalCalculator', methods=["POST"])
+def electricalCalculator():
+    requestJSON = request.get_json(force=True)
+    value = requestJSON["data"]["value"]
+    currentTypeIndex = int(requestJSON["data"]["currentTypeIndex"])
+
+    if (currentTypeIndex == 1):
+        current = float(value["current"][0])
+        voltage = float(value["voltage"][0])
+        currentUnit = value["current"][1]
+        voltageUnit = value["voltage"][1]
+
+        if (currentUnit == "mA"):
+            current = current / 1000
+        elif (currentUnit == "kA"):
+            current = current * 1000
+        else:
+            current = current
+
+        if (voltageUnit == "mV"):
+            voltage = voltage / 1000
+        elif (voltageUnit == "kV"):
+            voltage = voltage * 1000
+        else:
+            voltage = voltage
+
+        power = current * voltage / 1000
+        return {
+            "result": {
+                "POWER_IN_KILOWATTS": f"{power} kW",
+                "POWER_IN_WATTS": f"{power * 1000} W",
+                "POWER_IN_MILLIWATTS": f"{power * 1000 * 1000} mW",
+            }
+        }
+    elif (currentTypeIndex == 2):
+        current = float(value["current"][0])
+        voltage = float(value["voltage"][0])
+        return {
+            "result": {
+                "POWER_IN_KILOVOLT_AMPS": f"{current * voltage / 1000} kVA"
+            }
+        }
+    elif (currentTypeIndex == 3):
+        current = float(value["current"][0])
+        voltage = float(value["voltage"][0])
+        return {
+            "result": {
+                "POWER_IN_VOLT_AMPS": f"{current * voltage} VA"
+            }
+        }
+    elif (currentTypeIndex == 4):
+        current = float(value["current"][0])
+        ohms = float(value["ohms"][0])
+        return {
+            "result": {
+                "VOLTAGE_IN_VOLTS": f"{current * ohms} V"
+            }
+        }
+    elif (currentTypeIndex == 5):
+        current = float(value["current"][0])
+        power = float(value["power"][0])
+        return {
+            "result": {
+                "VOLTAGE_IN_VOLTS": f"{power / current} V"
+            }
+        }
+    elif (currentTypeIndex == 6):
+        current = float(value["current"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "MILLI_AMPERE_HOURS": f"{current * duration * 1000} mAh"
+            }
+        }
+    elif (currentTypeIndex == 7):
+        power = float(value["power"][0])
+        voltage = float(value["voltage"][0])
+        voltageUnit = value["voltage"][1]
+        if (voltageUnit == "mV"):
+            voltage = voltage / 1000
+        elif (voltageUnit == "kV"):
+            voltage = voltage * 1000
+        else:
+            voltage = voltage
+        amps = (1000 * power) / voltage
+        return {
+            "result": {
+                "CURRENT_IN_KILO_AMPS": f"{amps / 1000} kA",
+                "CURRENT_IN_AMPS": f"{amps} A",
+                "CURRENT_IN_MILLI_AMPS": f"{amps * 1000} mA"
+            }
+        }
+    elif (currentTypeIndex == 8):
+        power = float(value["power"][0])
+        powerFactor = float(value["powerFactor"][0])
+        if (powerFactor < 0 or powerFactor > 1):
+            return {
+                "result": {
+                    "OUT_OF_RANGE": "Enter Power Factor Between 0 to 1 (inclusive)"
+                }
+            }
+        return {
+            "result": {
+                "APPARENT_POWER_IN_KILOVOLT_AMPS": f"{power / powerFactor} kVA"
+            }
+        }
+    elif (currentTypeIndex == 9):
+        power = float(value["power"][0])
+        powerFactor = float(value["powerFactor"][0])
+        if (powerFactor < 0 or powerFactor > 1):
+            return {
+                "result": {
+                    "OUT_OF_RANGE": "Enter Power Factor Between 0 to 1 (inclusive)"
+                }
+            }
+        return {
+            "result": {
+                "APPARENT_POWER_IN_VOLT_AMPS": f"{(1000 * power) / powerFactor} VA"
+            }
+        }
+    elif (currentTypeIndex == 10):
+        power = float(value["power"][0])
+        current = float(value["current"][0])
+        return {
+            "result": {
+                "VOLTAGE_IN_VOLTS": f"{(1000 * power) / current} V"
+            }
+        }
+    elif (currentTypeIndex == 11):
+        power = float(value["power"][0])
+        return {
+            "result": {
+                "POWER_IN_WATTS": f"{1000 * power} W"
+            }
+        }
+    elif (currentTypeIndex == 12):
+        power = float(value["power"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "ENERGY_IN_JOULES": f"{1000 * power * duration} J"
+            }
+        }
+    elif (currentTypeIndex == 13):
+        power = float(value["power"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "ENERGY_IN_WATT_HOUR": f"{1000 * power * duration} Wh"
+            }
+        }
+    elif (currentTypeIndex == 14):
+        power = float(value["power"][0])
+        voltage = float(value["voltage"][0])
+        return {
+            "result": {
+                "CURRENT_IN_AMPS": f"{(1000 * power) / voltage} A"
+            }
+        }
+    elif (currentTypeIndex == 15):
+        power = float(value["power"][0])
+        powerFactor = float(value["powerFactor"][0])
+        if (powerFactor < 0 or powerFactor > 1):
+            return {
+                "result": {
+                    "OUT_OF_RANGE": "Enter Power Factor Between 0 to 1 (inclusive)"
+                }
+            }
+        return {
+            "result": {
+                "REAL_POWER_IN_KILO_WATTS": f"{power * powerFactor} kW"
+            }
+        }
+    elif (currentTypeIndex == 16):
+        power = float(value["power"][0])
+        return {
+            "result": {
+                "APPARENT_POWER_IN_VOLT_AMPERE": f"{1000 * power} VA"
+            }
+        }
+    elif (currentTypeIndex == 17):
+        power = float(value["power"][0])
+        current = float(value["current"][0])
+        phaseNumber = int(value["selections"]["PhaseNumber"])
+        if (phaseNumber == 1):
+            return {
+                "result": {
+                    "VOLTAGE_LINE_TO_NEUTRAL": f"{(power * 1000) / current} V"
+                }
+            }
+        elif (phaseNumber == 2):
+            return {
+                "result": {
+                    "VOLTAGE_LINE_TO_NEUTRAL": f"{(power * 1000) / (current * 2)} V"
+                }
+            }
+        else:
+            return {
+                "result": {
+                    "VOLTAGE_LINE_TO_LINE": f"{(power * 1000) / (current * Math.sqrt(3))} V"
+                }
+            }
+    elif (currentTypeIndex == 18):
+        power = float(value["power"][0])
+        powerFactor = float(value["powerFactor"][0])
+        if (powerFactor < 0 or powerFactor > 1):
+            return {
+                "result": {
+                    "OUT_OF_RANGE": "Enter Power Factor Between 0 to 1 (inclusive)"
+                }
+            }
+        return {
+            "result": {
+                "REAL_POWER_IN_WATTS": f"{1000 * power * powerFactor} W"
+            }
+        }
+    elif (currentTypeIndex == 19):
+        power = float(value["power"][0])
+        return {
+            "result": {
+                "JOULES_PER_SECOND": f"{1000 * power} J/s"
+            }
+        }
+    elif (currentTypeIndex == 20):
+        power = float(value["power"][0])
+        voltage = float(value["voltage"][0])
+        return {
+            "result": {
+                "CURRENT_IN_AMPS": f"{power / voltage} A"
+            }
+        }
+    elif (currentTypeIndex == 21):
+        power = float(value["power"][0])
+        powerFactor = float(value["powerFactor"][0])
+        if (powerFactor < 0 or powerFactor > 1):
+            return {
+                "result": {
+                    "OUT_OF_RANGE": "Enter Power Factor Between 0 to 1 (inclusive)"
+                }
+            }
+        return {
+            "result": {
+                "REAL_POWER_IN_KILO_WATTS": f"{(power * powerFactor) / 1000} kW"
+            }
+        }
+    elif (currentTypeIndex == 22):
+        power = float(value["power"][0])
+        return {
+            "result": {
+                "APPARENT_POWER_IN_KILO_VOLT_AMPERE": f"{power / 1000} kVA"
+            }
+        }
+    elif (currentTypeIndex == 23):
+        power = float(value["power"][0])
+        current = float(value["current"][0])
+
+        phaseNumber = int(value["selections"]["PhaseNumber"])
+
+        if (phaseNumber == 1):
+            return {
+                "result": {
+                    "VOLTAGE_LINE_TO_NEUTRAL": f"{power / current} V"
+                }
+            }
+        elif (phaseNumber == 2):
+            return {
+                "result": {
+                    "VOLTAGE_LINE_TO_NEUTRAL": f"{power / (current * 2)} V"
+                }
+            }
+        else:
+            return {
+                "result": {
+                    "VOLTAGE_LINE_TO_LINE": f"{power / (current * Math.sqrt(3))} V"
+                }
+            }
+    elif (currentTypeIndex == 24):
+        power = float(value["power"][0])
+        powerFactor = float(value["powerFactor"][0])
+
+        if (powerFactor < 0 or powerFactor > 1):
+            return {
+                "result": {
+                    "OUT_OF_RANGE": "Enter Power Factor Between 0 to 1 (inclusive)"
+                }
+            }
+        return {
+            "result": {
+                "REAL_POWER_IN_WATTS": f"{power * powerFactor} W"
+            }
+        }
+    elif (currentTypeIndex == 25):
+        power = float(value["power"][0])
+        return {
+            "result": {
+                "JOULES_PER_HOUR": f"{power * 3600} J/h",
+                "JOULES_PER_SECOND": f"{power} J/s"
+            }
+        }
+    elif (currentTypeIndex == 26):
+        voltage = float(value["voltage"][0])
+        ohms = float(value["ohms"][0])
+        return {
+            "result": {
+                "CURRENT_IN_AMPS": f"{voltage / ohms} A"
+            }
+        }
+    elif (currentTypeIndex == 27):
+        voltage = float(value["voltage"][0])
+        power = float(value["power"][0])
+        return {
+            "result": {
+                "CURRENT_IN_AMPS": f"{power / voltage} A"
+            }
+        }
+    elif (currentTypeIndex == 28):
+        voltage = float(value["voltage"][0])
+        current = float(value["current"][0])
+        return {
+            "result": {
+                "POWER_IN_KILOWATTS": f"{(voltage * current) / 1000} kW"
+            }
+        }
+    elif (currentTypeIndex == 29):
+        voltage = float(value["voltage"][0])
+        current = float(value["current"][0])
+        phaseNumber = int(value["selections"]["PhaseNumber"])
+        if (phaseNumber == 1):
+            return {
+                "result": {
+                    "POWER_IN_KILO_VOLT_AMPERE_SINGLE_PHASE": f"{(voltage * current) / 1000} kVA"
+                }
+            }
+        elif (phaseNumber == 2):
+            return {
+                "result": {
+                    "POWER_IN_KILO_VOLT_AMPERE_BI_PHASE": f"{(2 * voltage * current) / 1000} kVA"
+                }
+            }
+        else:
+            return {
+                "result": {
+                    "POWER_IN_KILO_VOLT_AMPERE_THREE_PHASE": f"{(Math.sqrt(3) * voltage * current) / 1000} kVA"
+                }
+            }
+    elif (currentTypeIndex == 30):
+        voltage = float(value["voltage"][0])
+        current = float(value["current"][0])
+        phaseNumber = int(value["selections"]["PhaseNumber"])
+
+        if (phaseNumber == 1):
+            return {
+                "result": {
+                    "POWER_IN_VOLT_AMPERE_SINGLE_PHASE": f"{voltage * current} VA"
+                }
+            }
+        elif (phaseNumber == 2):
+            return {
+                "result": {
+                    "POWER_IN_VOLT_AMPERE_BI_PHASE": f"{2 * voltage * current} VA"
+                }
+            }
+        else:
+            return {
+                "result": {
+                    "POWER_IN_VOLT_AMPERE_THREE_PHASE": f"{Math.sqrt(3) * voltage * current} VA"
+                }
+            }
+    elif (currentTypeIndex == 31):
+        voltage = float(value["voltage"][0])
+        current = float(value["current"][0])
+        return {
+            "result": {
+                "POWER_IN_WATTS": f"{voltage * current} W"
+            }
+        }
+    elif (currentTypeIndex == 32):
+        voltage = float(value["voltage"][0])
+        coulombs = float(value["coulombs"][0])
+        return {
+            "result": {
+                "ENERGY_IN_JOULES": f"{voltage * coulombs} J"
+            }
+        }
+    elif (currentTypeIndex == 33):
+        power = float(value["power"][0])
+        voltage = float(value["voltage"][0])
+
+        voltageUnit = value["voltage"][1]
+
+        if (voltageUnit == "mV"):
+            voltage = voltage / 1000
+        elif (voltageUnit == "kV"):
+            voltage = voltage * 1000
+        else:
+            voltage = voltage
+
+        amps = power / voltage
+        return {
+            "result": {
+                "CURRENT_IN_KILO_AMPS": f"{amps / 1000} kA",
+                "CURRENT_IN_AMPS": f"{amps} A",
+                "CURRENT_IN_MILLI_AMPS": f"{amps * 1000} mA"
+            }
+        }
+    elif (currentTypeIndex == 34):
+        power = float(value["power"][0])
+        return {
+            "result": {
+                "POWER_IN_KILO_WATT": f"{power / 1000} kW"
+            }
+        }
+    elif (currentTypeIndex == 35):
+        power = float(value["power"][0])
+        powerFactor = float(value["powerFactor"][0])
+        if (powerFactor < 0 or powerFactor > 1):
+            return {
+                "result": {
+                    "OUT_OF_RANGE": "Enter Power Factor Between 0 to 1 (inclusive)"
+                }
+            }
+        return {
+            "result": {
+                "APPARENT_POWER_IN_KILO_VOLT_AMPERE": f"{power / (1000 * powerFactor)} kVA"
+            }
+        }
+    elif (currentTypeIndex == 36):
+        power = float(value["power"][0])
+        powerFactor = float(value["powerFactor"][0])
+        if (powerFactor < 0 or powerFactor > 1):
+            return {
+                "result": {
+                    "OUT_OF_RANGE": "Enter Power Factor Between 0 to 1 (inclusive)"
+                }
+            }
+        return {
+            "result": {
+                "APPARENT_POWER_IN_VOLT_AMPERE": f"{power / powerFactor} VA"
+            }
+        }
+    elif (currentTypeIndex == 37):
+        power = float(value["power"][0])
+        current = float(value["current"][0])
+        return {
+            "result": {
+                "VOLTAGE_IN_VOLTS": f"{power / current} V"
+            }
+        }
+    elif (currentTypeIndex == 38):
+        power = float(value["power"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "ENERGY_IN_JOULES": f"{power * duration} J"
+            }
+        }
+    elif (currentTypeIndex == 39):
+        power = float(value["power"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "ENERGY_IN_WATT_HOUR": f"{power * duration} Wh"
+            }
+        }
+    elif (currentTypeIndex == 40):
+        joules = float(value["joules"][0])
+        voltage = float(value["voltage"][0])
+        return {
+            "result": {
+                "CURRENT_IN_AMPS": f"{joules / voltage} A"
+            }
+        }
+    elif (currentTypeIndex == 41):
+        joules = float(value["joules"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "POWER_IN_KILO_WATT": f"{joules / (1000 * duration)} kW"
+            }
+        }
+    elif (currentTypeIndex == 42):
+        joules = float(value["joules"][0])
+        return {
+            "result": {
+                "POWER_IN_KILO_VOLT_AMPERE": f"{joules * 0.001} kVA"
+            }
+        }
+    elif (currentTypeIndex == 43):
+        joules = float(value["joules"][0])
+        return {
+            "result": {
+                "POWER_IN_VOLT_AMPS": f"{joules} VA"
+            }
+        }
+    elif (currentTypeIndex == 44):
+        joules = float(value["joules"][0])
+        coulombs = float(value["coulombs"][0])
+        return {
+            "result": {
+                "VOLTAGE_IN_VOLTS": f"{joules / coulombs} V"
+            }
+        }
+    elif (currentTypeIndex == 45):
+        joules = float(value["joules"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "POWER_IN_WATTS": f"{joules / duration} W"
+            }
+        }
+    elif (currentTypeIndex == 46):
+        joules = float(value["joules"][0])
+        return {
+            "result": {
+                "ENERGY_IN_WATT_HOUR": f"{joules / 3600} Wh"
+            }
+        }
+    elif (currentTypeIndex == 47):
+        mAh = float(value["mAh"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "CURRENT_IN_AMPS": f"{mAh / (duration * 1000)} A"
+            }
+        }
+    elif (currentTypeIndex == 48):
+        mAh = float(value["mAh"][0])
+        voltage = float(value["voltage"][0])
+        return {
+            "result": {
+                "ENERGY_IN_WATT_HOUR": f"{(mAh * voltage) / 1000} Wh"
+            }
+        }
+    elif (currentTypeIndex == 49):
+        energy = float(value["energy"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "POWER_IN_KILO_WATT": f"{energy / (1000 * duration)} kW"
+            }
+        }
+    elif (currentTypeIndex == 50):
+        energy = float(value["energy"][0])
+        duration = float(value["duration"][0])
+        return {
+            "result": {
+                "POWER_IN_WATT": f"{energy / duration} W"
+            }
+        }
+    elif (currentTypeIndex == 51):
+        energy = float(value["energy"][0])
+        return {
+            "result": {
+                "JOULE": f"{energy * 3600} J"
+            }
+        }
+    elif (currentTypeIndex == 52):
+        energy = float(value["energy"][0])
+        voltage = float(value["voltage"][0])
+
+        return {
+            "result": {
+                "ELECTRICAL_CHARGE_IN_MILLIAMP_HOURS": f"{(1000 * energy) / voltage} mAh"
+            }
+        }
 
 
 @app.route('/mathLog1', methods=["POST"])
@@ -1030,7 +1597,7 @@ def mathLog3():
         return {
             "result": f"SIN = {SIN}  COS = {COS}  TAN = {TAN}  COSEC = {COSEC}  SEC = {SEC}  COT = {COT}"
         }
-    else:
+    elif(method == "Degree"):
         number2 = number
         number2 *= Math.pi / 180
 
@@ -1056,6 +1623,20 @@ def mathLog3():
 
         return {
             "result": f"SIN_DEGREE {SIN_DEGREE}  COS_DEGREE {COS_DEGREE}  TAN_DEGREE {TAN_DEGREE}  COSEC_DEGREE {COSEC_DEGREE}  SEC_DEGREE {SEC_DEGREE}  COT_DEGREE {COT_DEGREE}"
+        }
+    else:
+        ARC_SIN_RADIAN = Math.asin(number)
+        ARC_COS_RADIAN = Math.acos(number)
+        ARC_TAN_RADIAN = Math.atan(number)
+
+        number2 = number
+        number2 *= Math.pi / 180
+
+        ARC_SIN_DEGREE = Math.asin(number2)
+        ARC_COS_DEGREE = Math.acos(number2)
+        ARC_TAN_DEGREE = Math.atan(number2)
+        return {
+            "result": f"ARC_SIN_RADIAN {ARC_SIN_RADIAN}  ARC_COS_RADIAN {ARC_COS_RADIAN}  ARC_TAN_RADIAN {ARC_TAN_RADIAN}  ARC_SIN_DEGREE {ARC_SIN_DEGREE}  ARC_COS_DEGREE {ARC_COS_DEGREE}  ARC_TAN_DEGREE {ARC_TAN_DEGREE}"
         }
 
 
