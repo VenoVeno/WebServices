@@ -1,0 +1,29 @@
+.rle-text-compression-container {
+    margin: 20px;
+    text-align: center;
+
+    .header {
+        padding: 20px;
+        text-transform: uppercase;
+    }
+
+    .input-type-1 {
+        margin-bottom: 10%;
+    }
+
+    .flex-wrapper {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 32px;
+
+        .custom-button {
+            width: 30%;
+        }
+    }
+
+    .result {
+        color: #0c6688;
+        padding: 28px;
+    }
+}

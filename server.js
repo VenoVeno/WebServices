@@ -1715,6 +1715,82 @@ function COMMON_LOG_FUNC(number) {
     return answer
 }
 
+app.post('/rleCompression', function (req, res) {
+    try {
+        const { text } = req.body.data
+        console.log("Input Text", text)
+        if (text.length === 1) res.send({ compressedText: `1${text}` })
+        else {
+            const TEXT_LENGTH = text.length
+            let lString = "", rString = ""
+            let lCurrent = text[0], rCurrent = text[TEXT_LENGTH - 1]
+            let lCount = 1, rCount = 1;
+            let lStart = 1, rStart = TEXT_LENGTH - 2;
+            while (lStart < rStart) {
+                // FOR LEFT PUSH
+                if (lCurrent == text[lStart]) {
+                    lCount++;
+                    lStart++;
+                }
+                else {
+                    lString += `${lCount}${lCurrent}`
+                    lCount = 1
+                    lCurrent = text[lStart++]
+                }
+
+                // FROM RIGHT
+                if (rCurrent == text[rStart]) {
+                    rCount++;
+                    rStart--;
+                }
+                else {
+                    rString = `${rCount}${rCurrent}` + rString
+                    rCount = 1
+                    rCurrent = text[rStart--]
+                }
+            }
+
+            let compressedText = ""
+
+            let middleCount = 0, middleText = ""
+            if (lStart === rStart) {
+                middleCount = 1
+                middleText = text[lStart]
+            }
+            console.log(lCurrent)
+            console.log(rCurrent)
+            console.log(middleText)
+            if ((lCurrent === rCurrent && lCurrent === middleText && rCurrent === middleText) // FOR ODD PAIR IF AAA EQUAL
+                || (lCurrent === rCurrent && TEXT_LENGTH % 2 === 0)) { // FOR EVEN PAIR IF AA EQUAL
+                console.log("CASE 1 => AAA AA")
+                compressedText = lString + `${lCount + middleCount + rCount}${lCurrent}` + rString
+            }
+            else if (lCurrent === middleText) { // IF MIDDLE IS EQUAL TO LEFT  - AAB 
+                console.log("CASE 2 => AAB")
+                compressedText = lString + `${lCount + middleCount}${lCurrent}` + `${rCount}${rCurrent}` + rString
+            }
+            else if (rCurrent === middleText) { // IF MIDDLE IS EQUAL TO RIGHT - ABB
+                console.log("CASE 3 => ABB")
+                compressedText = lString + `${lCount}${lCurrent}` + `${rCount + middleCount}${rCurrent}` + rString
+            }
+            else if (middleText) { // IF MIDDLE TEXT IS NOT EQUAL TO LEFT AND RIGHT AND MIDDLE TEXT AVAILABLE ABC
+                console.log("CASE 4 => ABC")
+                compressedText = lString + `${lCount}${lCurrent}` + `1${middleText}` + `${rCount}${rCurrent}` + rString
+            }
+            else { // IF MIDDLE TEXT IS NOT EQUAL TO LEFT AND RIGHT AND MIDDLE TEXT NOT AVAILABLE AB
+                console.log("CASE 5 => AB")
+                compressedText = lString + `${lCount}${lCurrent}` + `${rCount}${rCurrent}` + rString
+            }
+            console.log("Compressed Text", compressedText)
+            res.send({
+                compressedText
+            })
+        }
+    } catch (error) {
+        console.log("Some Error Occured While Implementing Run-length Coding Techniques in Text Compression ", error)
+    }
+})
+
 app.listen(PORT, (error) => {
     if (error) {
         console.log("Some Error Occured While Starting Node Server ", error)

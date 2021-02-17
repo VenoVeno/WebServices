@@ -29,6 +29,9 @@ import MathLog2Calculator from './pages/MathLog2Calculator/MathLog2Calculator.co
 import MathLog3Calculator from './pages/MathLog3Calculator/MathLog3Calculator.component';
 import StatisticsCalculator from './pages/StatisticsCalculator/StatisticsCalculator.component';
 
+// PROGRAMS TASK 3
+import RLECompression from './pages/RLECompression/RLECompression.component';
+
 // COMMON PAGE DISPLAY
 import LanguageSelection from './components/LanguageSelection/LanguageSelection.component';
 import ProgramSelection from './components/ProgramSelection/ProgramSelection.component';
@@ -74,6 +77,9 @@ function App({ CURRENT_PROGRAM_NAME, PROGRAMS_AVAILABLE, CURRENT_EXERCISE, EXERC
         <Route exact path={`/${EXERCISE_AVAILABLE[1]}/${PROGRAMS_AVAILABLE[2]}`} component={MathLog2Calculator} />
         <Route exact path={`/${EXERCISE_AVAILABLE[1]}/${PROGRAMS_AVAILABLE[3]}`} component={MathLog3Calculator} />
         <Route exact path={`/${EXERCISE_AVAILABLE[1]}/${PROGRAMS_AVAILABLE[4]}`} component={StatisticsCalculator} />
+        
+        {/* PROGRAM SET 3 */}
+        <Route exact path={`/${EXERCISE_AVAILABLE[2]}/${PROGRAMS_AVAILABLE[0]}`} component={RLECompression} />
 
         <Route exact path='/status' component={ServerStatusPage} />
         <Route path="*" component={PageNotFound} />
